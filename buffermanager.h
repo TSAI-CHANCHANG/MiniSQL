@@ -1,6 +1,11 @@
 #ifndef BUFFERMANAGER_H
 #define BUFFERMANAGER_H
 
+const int BLOCKSIZE = 4096;
+const int BYTESIZE = 8;
+
+using namespace std;
+
 class position{
 public:
     int blocknum;//buffer中的第几个block
@@ -9,18 +14,33 @@ public:
 
 class block{
 public:
+    string filename;//对应文件名
+    int fileoffset;//对应在文件中的第几个block
     bool dirty;
     bool pin;
-    const int totalsize;//4096
+    bool used;
     int usedsize;//已经使用的size
+    char content[BLOCKSIZE];
+
+    void ClearBlock(){
+        for (int i;i<BLOCKSIZE;i++) content[i]=0;
+        filename = "";
+        dirty = pin = used = false;
+        usedsize = 0;
+        fileoffset = 0;
+    }
 };
 
 class buffermanager{
 public:
+    buffermanager();
+    ~buffermanager();
+
     int FindBlockinBuffer(string fileName, int offset);
     //在buffer中找一个块（没有就从文件中放到buffer里，返回这是第几个buffer block）
+    //约定三种文件后缀，table是.tab，index是.idx，catlog是.cat
 
-    position GetInsertPos(int size);
+    position GetInsertPos(string fileName,int size);
     //找到一个可以插入大小为size个字节的位置（size<4096）
 
     void DirtBlock(int buffernum);
@@ -33,8 +53,10 @@ public:
     //更新一个block的使用时间，LRU时候用
 
 private:
-    const int blocknumber;
-    block blocks[blocknumber];//预计有100个buffer中的block
+    void WriteBack(int blocknum);
 };
+
+const int BLOCKNUMBER = 10;
+block blocks[BLOCKNUMBER];//预计有10个buffer中的block
 
 #endif // BUFFERMANAGER_H
