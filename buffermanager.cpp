@@ -44,7 +44,7 @@ int buffermanager::FindBlockinBuffer(string fileName, int offset)
         }
 
     //如果不在，就先找buffer中一个空的块，然后将这个块从文件里写入buffer
-    int blocknum = GetAEmptyBlock;
+    int blocknum = GetAnEmptyBlock;
     WriteIn(fileName,offset,blocknum);
     return blocknum;
 }
@@ -76,6 +76,48 @@ int buffermanager::GetAnEmptyBlock()
     //如果这个块是dirty的，那么要先写回文件中
     if (blocks[LRU].dirty) WriteBack(LRU);
     return LRU;
+}
+
+int buffermanager::FindSuitBlockinBuffer(string fileName, int size)
+{
+    for (int i = 0; i< BLOCKNUMBER; i++)
+        if (blocks[i].filename==fileName && BLOCKSIZE-blocks[i].usedsize)
+            return i;
+
+    string filename = blocks[blocknum].filename;
+    fstream File(filename);
+    int l = File.tellg();
+    File.seekg(0, ios::end);
+    l = File.tellg()-l;
+    File.seekg(0, ios::beg);
+
+    char ch;
+    long count = 0;
+    while (1)
+    {
+        File >> ch;
+        while (ch)
+        {
+            File >> ch;
+            count++;
+        }
+        int d = (count / BLOCKSIZE + 1) * BLOCKSIZE - count;
+        if (d>=size) {
+            int blocknum = GetAnEmptyBlock;
+            WriteIn(fileName,count/BLOCKSIZE,blocknum);
+            return blocknum;
+        }
+        else
+        {
+            count = (count / BLOCKSIZE + 1) * BLOCKSIZE;
+        }
+        if (count>=l) break;
+    }
+    File.seekg(count, ios::beg);
+    File << 0;
+    int blocknum = GetAnEmptyBlock;
+    WriteIn(fileName,count/BLOCKSIZE,blocknum);
+    return blocknum;
 }
 
 void buffermanager::DirtBlock(int blocknum)
