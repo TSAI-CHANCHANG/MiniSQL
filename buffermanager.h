@@ -14,7 +14,7 @@ public:
 };
 
 class block{
-public:
+private:
     string filename;//对应文件名
     int fileoffset;//对应在文件中的第几个block
     bool dirty;
@@ -31,6 +31,25 @@ public:
         usedsize = 0;
         fileoffset = 0;
     }
+
+    void SetBlock(string filename, int fileoffset)
+    {
+        this->filename = filename;
+        this->fileoffset = fileoffset;
+        dirty = false;
+        pin = false;
+        used = true;
+        usedsize = this->FindUsedSize;
+        Recenttime = time(NULL);
+    }
+
+    int FindUsedSize()
+    {
+        for (int i = 0; i< BLOCKSIZE; i++)
+            if (content[i]=='\0') return i-1;
+    }
+
+    friend class buffermanager;
 };
 
 class buffermanager{
@@ -45,6 +64,16 @@ public:
     position GetInsertPos(string fileName,int size);
     //找到一个可以插入大小为size个字节的位置（size<4096）
 
+private:
+    void WriteBack(int blocknum);
+    //将一个块写回文件中
+
+    void WriteIn(string fileName, int offset, int blocknum);
+    //将文件中的一个块读入buffer中的一块
+
+    int GetAnEmptyBlock();
+    //找一个空块（没有的话就按照LRU规则删一块）
+
     void DirtBlock(int blocknum);
     //把一个Block设为dirty
 
@@ -53,9 +82,6 @@ public:
 
     void UpdateBlock(int blocknum);
     //更新一个block的使用时间，LRU时候用
-
-private:
-    void WriteBack(int blocknum);
 };
 
 const int BLOCKNUMBER = 10;
