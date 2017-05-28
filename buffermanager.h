@@ -1,6 +1,7 @@
 #ifndef BUFFERMANAGER_H
 #define BUFFERMANAGER_H
 
+#include<time.h>
 const int BLOCKSIZE = 4096;
 const int BYTESIZE = 8;
 
@@ -21,6 +22,7 @@ public:
     bool used;
     int usedsize;//已经使用的size
     char content[BLOCKSIZE];
+    time_t Recenttime;//最近使用时间
 
     void ClearBlock(){
         for (int i;i<BLOCKSIZE;i++) content[i]=0;
@@ -43,13 +45,13 @@ public:
     position GetInsertPos(string fileName,int size);
     //找到一个可以插入大小为size个字节的位置（size<4096）
 
-    void DirtBlock(int buffernum);
+    void DirtBlock(int blocknum);
     //把一个Block设为dirty
 
-    void PinBlock(int buffernum);
+    void PinBlock(int blocknum);
     //将一个block固定住，设为不能修改
 
-    void UpdateBlock(int buffernum);
+    void UpdateBlock(int blocknum);
     //更新一个block的使用时间，LRU时候用
 
 private:
