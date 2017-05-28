@@ -60,6 +60,8 @@ public:
     char* GetDetail(int blocknum, int blockoffset);
     //给出blocknum和blockoffset，得到对应的指针
 
+    int FindSuitBlockinBuffer(string fileName, int size);
+
 private:
     void WriteBack(int blocknum);
     //将一个块写回文件中
