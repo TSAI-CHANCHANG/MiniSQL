@@ -27,6 +27,15 @@ FindBlockinBuffer
 
 File——
 drop index
-删除文件
+DeleteFile 删除文件
+删除所有内存中的blocks
 
 新建文件就不用了，反正第一次插入会自动新建
+
+
+
+********
+爱用不用系列：
+为了给上层提供方便，我弄了两个新函数
+Insert(blocknum,char* data) 在编号为blocknum的块最后插入data
+Delete(blocknum,blockoffset,size) 从编号为blocknum的块里第offset的位置起删掉大小为size的数据

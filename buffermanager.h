@@ -1,9 +1,12 @@
 #ifndef BUFFERMANAGER_H
 #define BUFFERMANAGER_H
+
 #include<string>
 #include<time.h>
+
 const int BLOCKSIZE = 4096;
 const int BYTESIZE = 8;
+const int BLOCKNUMBER = 10;
 
 using namespace std;
 
@@ -20,31 +23,14 @@ public:
     int fileoffset;//对应在文件中的第几个block
     char content[BLOCKSIZE+1];
 
-    void ClearBlock(){
-        for (int i=0;i<BLOCKSIZE+1;i++) content[i]=0;
-        filename = "";
-        dirty = pin = used = false;
-        usedsize = 0;
-        fileoffset = 0;
-    }
+    void ClearBlock();
+    //将这个块恢复初始化状态
 
-    void SetBlock(string filename, int fileoffset)
-    {
-        this->filename = filename;
-        this->fileoffset = fileoffset;
-        dirty = false;
-        pin = false;
-        used = true;
-        usedsize = FindUsedSize();
-        Recenttime = time(NULL);
-    }
+    void SetBlock(string filename, int fileoffset);
+    //将这个块根据来源赋值，包括对应文件和文件位置，时间更新等
 
-    int FindUsedSize()
-    {
-        for (int i = 0; i< BLOCKSIZE; i++)
-            if (content[i]=='\0') return i-1;
-        return BLOCKSIZE;
-    }
+    int FindUsedSize();
+    //更新这个块的大小，返回值为有几个字节被占用了，而不是占用到下标多少的字节
 
     friend class buffermanager;
 };
@@ -65,12 +51,19 @@ public:
     //给出文件名和需要插入的数据大小，返回一个足够在末端插入这个数据量的块
 
     void DeleteFile(string filename);
+    //drop表或者索引的时候用，将文件删除（同时删除内存中的缓冲区）
 
     void DirtBlock(int blocknum);
     //把一个Block设为dirty
 
     void PinBlock(int blocknum);
     //将一个block固定住，设为不能修改
+
+    void Insert(int blocknum, char* data);
+    //在编号为blocknum的块最后插入data
+
+    void Delete(int blocknum, int blockoffset, int size);
+    //从编号为blocknum的块里第offset的位置起删掉大小为size的数据
 
 private:
     void WriteBack(int blocknum);
@@ -84,9 +77,8 @@ private:
 
     void UpdateBlock(int blocknum);
     //更新一个block的使用时间，LRU时候用
+
+    void DeleteBlock(string filename);
 };
-
-const int BLOCKNUMBER = 3;
-
 
 #endif // BUFFERMANAGER_H
