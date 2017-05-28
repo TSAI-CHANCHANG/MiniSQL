@@ -1,0 +1,9 @@
+Buffer功能可以分为如下三块：
+
+Read
+FindBlockinBuffer  给出filename和offset，得到buffer中有这个数据的一个block
+GetDetail 给出blocknum和blockoffset，得到对应的指针
+
+Write
+
+File

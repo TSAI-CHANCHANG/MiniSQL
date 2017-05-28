@@ -7,22 +7,18 @@ const int BYTESIZE = 8;
 
 using namespace std;
 
-class position{
-public:
-    int blocknum;//buffer中的第几个block
-    int blockoffset;//这个block中的第几个字节
-};
-
 class block{
 private:
-    string filename;//对应文件名
-    int fileoffset;//对应在文件中的第几个block
     bool dirty;
     bool pin;
     bool used;
     int usedsize;//已经使用的size
-    char content[BLOCKSIZE];
     time_t Recenttime;//最近使用时间
+
+public:
+    string filename;//对应文件名
+    int fileoffset;//对应在文件中的第几个block
+    char content[BLOCKSIZE];
 
     void ClearBlock(){
         for (int i;i<BLOCKSIZE;i++) content[i]=0;
@@ -61,8 +57,8 @@ public:
     //在buffer中找一个块（没有就从文件中放到buffer里，返回这是第几个buffer block）
     //约定三种文件后缀，table是.tab，index是.idx，catlog是.cat
 
-    position GetInsertPos(string fileName,int size);
-    //找到一个可以插入大小为size个字节的位置（size<4096）
+    char* GetDetail(int blocknum, int blockoffset);
+    //给出blocknum和blockoffset，得到对应的指针
 
 private:
     void WriteBack(int blocknum);
