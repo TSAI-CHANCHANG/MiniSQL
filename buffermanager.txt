@@ -1,9 +1,33 @@
 Buffer功能可以分为如下三块：
 
-Read
+Read——
 FindBlockinBuffer  给出filename和offset，得到buffer中有这个数据的一个block
 GetDetail 给出blocknum和blockoffset，得到对应的指针
 
-Write
+Write——
+Delete Record
+FindBlockinBuffer  给出filename和offset，得到buffer中有这个数据的一个block，供上一级的manager进行修改
+修改时在这个block中删去对应的记录即可
+DirtBlock 将这个block设为dirty
 
-File
+Insert Record
+FindSuitBlockinBuffer 给出filename和insertsize，返回一个有足够空间的block供上一级manager进行插入（block有usedsize成员变量，可以利用）
+DirtBlock
+
+select record（不用index）
+FindBlockinBuffer 在对应文件中依次找
+匹配
+打印
+
+select record(index)
+用B+树找到结点，指向这个块（filename和offset）
+FindBlockinBuffer
+
+File——
+drop index
+删除文件
+
+create index
+create table
+第一次insert record
+建立文件
