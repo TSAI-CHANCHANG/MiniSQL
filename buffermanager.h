@@ -1,6 +1,6 @@
 #ifndef BUFFERMANAGER_H
 #define BUFFERMANAGER_H
-
+#include<string>
 #include<time.h>
 const int BLOCKSIZE = 4096;
 const int BYTESIZE = 8;
@@ -18,10 +18,10 @@ private:
 public:
     string filename;//对应文件名
     int fileoffset;//对应在文件中的第几个block
-    char content[BLOCKSIZE];
+    char content[BLOCKSIZE+1];
 
     void ClearBlock(){
-        for (int i;i<BLOCKSIZE;i++) content[i]=0;
+        for (int i=0;i<BLOCKSIZE+1;i++) content[i]=0;
         filename = "";
         dirty = pin = used = false;
         usedsize = 0;
@@ -35,7 +35,7 @@ public:
         dirty = false;
         pin = false;
         used = true;
-        usedsize = this->FindUsedSize;
+        usedsize = FindUsedSize();
         Recenttime = time(NULL);
     }
 
@@ -43,6 +43,7 @@ public:
     {
         for (int i = 0; i< BLOCKSIZE; i++)
             if (content[i]=='\0') return i-1;
+        return BLOCKSIZE;
     }
 
     friend class buffermanager;
@@ -61,6 +62,15 @@ public:
     //给出blocknum和blockoffset，得到对应的指针
 
     int FindSuitBlockinBuffer(string fileName, int size);
+    //给出文件名和需要插入的数据大小，返回一个足够在末端插入这个数据量的块
+
+    void DeleteFile(string filename);
+
+    void DirtBlock(int blocknum);
+    //把一个Block设为dirty
+
+    void PinBlock(int blocknum);
+    //将一个block固定住，设为不能修改
 
 private:
     void WriteBack(int blocknum);
@@ -72,17 +82,11 @@ private:
     int GetAnEmptyBlock();
     //找一个空块（没有的话就按照LRU规则删一块）
 
-    void DirtBlock(int blocknum);
-    //把一个Block设为dirty
-
-    void PinBlock(int blocknum);
-    //将一个block固定住，设为不能修改
-
     void UpdateBlock(int blocknum);
     //更新一个block的使用时间，LRU时候用
 };
 
-const int BLOCKNUMBER = 10;
-block blocks[BLOCKNUMBER];//预计有10个buffer中的block
+const int BLOCKNUMBER = 3;
+
 
 #endif // BUFFERMANAGER_H

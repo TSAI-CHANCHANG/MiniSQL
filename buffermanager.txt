@@ -10,6 +10,8 @@ FindBlockinBuffer  给出filename和offset，得到buffer中有这个数据的一个block，供上
 修改时在这个block中删去对应的记录即可
 DirtBlock 将这个block设为dirty
 
+删除对应的index中的数据，这个具体要index manager实施，应该是给我一个filename和offset，我将对应的数据块交给index manager进行修改
+
 Insert Record
 FindSuitBlockinBuffer 给出filename和insertsize，返回一个有足够空间的block供上一级manager进行插入（block有usedsize成员变量，可以利用）
 DirtBlock
@@ -27,7 +29,4 @@ File——
 drop index
 删除文件
 
-create index
-create table
-第一次insert record
-建立文件
+新建文件就不用了，反正第一次插入会自动新建
