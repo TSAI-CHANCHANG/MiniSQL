@@ -1,34 +1,40 @@
+总体来说，buffer实现的思路和机组上学的差不多。采用的是Write back+allocate的方式。
+
+
 Buffer功能可以分为如下三块：
 
 Read——
-FindBlockinBuffer  给出filename和offset，得到buffer中有这个数据的一个block
-GetDetail 给出blocknum和blockoffset，得到对应的指针
+	FindBlockinBuffer  给出filename和offset（offset是指这个文件中的第几个block），得到buffer中有这个数据的一个block
+	GetDetail 给出blocknum和blockoffset，得到对应的指针
+
+select record（不用index）
+	FindBlockinBuffer 在对应文件中依次找
+		比如在student.tab中找，那就每次依次给我"student.tab",1 "student.tab",2……
+		我会把这个块依次给你（每个块中有多条记录，你可以通过查看block[num].usedsize来看是否找完了这个块）
+	找到这个块之后匹配……那就不是我的事情了233
+	打印
+
+select record(index)
+	用B+树找到结点，如果可以希望每个叶节点的指针就是指向这个块的（filename和offset）
+	用FindBlockinBuffer
 
 Write——
 Delete Record
-FindBlockinBuffer  给出filename和offset，得到buffer中有这个数据的一个block，供上一级的manager进行修改
-修改时在这个block中删去对应的记录即可
-DirtBlock 将这个block设为dirty
+	FindBlockinBuffer  给出filename和offset，得到buffer中有这个数据的一个block，供上一级的manager进行修改
+	修改时在这个block中删去对应的记录即可（可以用我给的函数Delete，在下面有写）
+	DirtBlock 将这个block设为dirty
 
-删除对应的index中的数据，这个具体要index manager实施，应该是给我一个filename和offset，我将对应的数据块交给index manager进行修改
+	删除对应的index中的数据，这个具体要index manager实施，应该是给我一个filename和offset，我将对应的数据块交给index manager进行修改
 
 Insert Record
-FindSuitBlockinBuffer 给出filename和insertsize，返回一个有足够空间的block供上一级manager进行插入（block有usedsize成员变量，可以利用）
-DirtBlock
-
-select record（不用index）
-FindBlockinBuffer 在对应文件中依次找
-匹配
-打印
-
-select record(index)
-用B+树找到结点，指向这个块（filename和offset）
-FindBlockinBuffer
+	FindSuitBlockinBuffer 给出filename和insertsize，返回一个有足够空间的block供上一级manager进行插入（block有usedsize成员变量，可以利用）
+	插入（可以用我的）
+	DirtBlock
 
 File——
 drop index
-DeleteFile 删除文件
-删除所有内存中的blocks
+	DeleteFile 删除文件
+	删除所有内存中的blocks（这个我自动干了，不用管）
 
 新建文件就不用了，反正第一次插入会自动新建
 
@@ -37,5 +43,5 @@ DeleteFile 删除文件
 ********
 爱用不用系列：
 为了给上层提供方便，我弄了两个新函数
-Insert(blocknum,char* data) 在编号为blocknum的块最后插入data
-Delete(blocknum,blockoffset,size) 从编号为blocknum的块里第offset的位置起删掉大小为size的数据
+	Insert(blocknum,char* data) 在编号为blocknum的块最后插入data
+	Delete(blocknum,blockoffset,size) 从编号为blocknum的块里第offset的位置起删掉大小为size的数据
