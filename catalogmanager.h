@@ -9,8 +9,8 @@ class catalogmanager
 public:
     catalogmanager();
 
-    void CreateTable(string Tablename, string Attributes);
-    //建表
+    int CreateTable(string Tablename, string Attributes);
+    //建表，返回值是primary的位置，如果没有就是-1，供API接下来建立索引用
 
     void DropTable(string Tablename);
     //删除表以及建立在这个表上的所有索引（这里的删除索引是指找到所有建立在这个表上的索引，调用index manager上的dropindex）
@@ -27,7 +27,7 @@ private:
     Table GetTable(string Tablename);
     //通过缓存，从文件中获得一个表
 
-    void SetTable(const Table& tab);
+    void SetTable(Table& tab);
     //通过缓存，将一个表存回文件中
 };
 
