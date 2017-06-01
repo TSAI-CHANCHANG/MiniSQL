@@ -13,6 +13,7 @@ public:
     bool primary;//这个属性是否是primary
     bool unique;//这个属性是否是unique
     bool index;//这个属性是否有index
+    int blocknum;//表示这一个attribute在文件中是第几个block
 };
 
 class Table
