@@ -6,6 +6,8 @@
 #define ERROR       -1
 #define QUIT_NUMBER -2
 
+static char address[1000];
+static ifstream ifs;
 using namespace std;
 /////////////////////////////////////////////////
 /////Function No. 1:
@@ -35,13 +37,19 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 {
 	string firstWord;
 	int SQLCurrentPointer = 0, end = 0;
-	static char address[1000];
-	ifstream ifs("D:\input.txt");
 
 	//////////////////////input part/////////////////////////////////////////////
 	if (SQLSentence.empty() && fileReadFlag == 1)//the sentence is empty and now it is time to read file
 	{
 		getline(ifs, SQLSentence);
+		if (SQLSentence.empty())//the file has come to end, but doesn't have a quit command;
+		{
+			cout << "ERROR! This file doesn't have a quit command\n";
+			fileReadFlag = 0;//back to keyboard input
+			SQLSentence = "";
+			ifs.close();
+			return QUIT_NUMBER;
+		}
 		cout << SQLSentence << endl;
 	}
 	else if(SQLSentence.empty())
@@ -52,6 +60,10 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
 		SQLCurrentPointer++;
 	end = SQLSentence.find(' ', SQLCurrentPointer);
+	if (end == -1)
+	{
+		end = SQLSentence.find(';', SQLCurrentPointer);
+	}
 	firstWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);//get the first word from SQL sentence
 	SQLCurrentPointer = end;//pointer move forward
 	errno_t  err;
@@ -71,7 +83,8 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 		while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
 			SQLCurrentPointer++;
 		end = SQLSentence.find(' ', SQLCurrentPointer);
-		nextWord = SQLSentence.substr(SQLCurrentPointer, end - 1);
+		nextWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);//check whether the quit instruction
+																				  //has other words
 		if (nextWord == ";")			
 			return QUIT_NUMBER;
 		else
@@ -87,14 +100,15 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 		while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
 			SQLCurrentPointer++;
 		end = SQLSentence.find(' ', SQLCurrentPointer);
-		temp = SQLSentence.substr(SQLCurrentPointer + 1, end - 2);
+		temp = SQLSentence.substr(SQLCurrentPointer + 1, end - SQLCurrentPointer - 2);/////warning！！！！！！
 		strcpy(address, temp.c_str());
-		if (err = freopen(address, "r", stdin) != 0)
+		if (freopen(address, "r", stdin) == 0)
 			cout << "The file "<< address <<" was not opened\n";    
 		else
 		{
 			cout << "The file " << address << " was opened\n";
 			fileReadFlag = 1;
+			ifs.open(address);
 		}
 		SQLCurrentPointer = end;
 	}
@@ -126,5 +140,8 @@ int main(int argc, char *argv[])
 		if (conditionCode == QUIT_NUMBER)
 			stop = 1;
 	}
+	cout << "Press Any Key to Continue..." << endl;
+	getchar();
 	return 0;
 }
+
