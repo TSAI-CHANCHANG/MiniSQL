@@ -12,8 +12,7 @@ public:
     string attrname;
     bool primary;//这个属性是否是primary
     bool unique;//这个属性是否是unique
-    bool index;//这个属性是否有index
-    int blocknum;//表示这一个attribute在文件中是第几个block
+    string indexname;//这个属性的indexname，没有就是"noindex"
 };
 
 class Table
@@ -23,7 +22,8 @@ public:
     short primary;//primary的位置，-1代表没有
     vector<tuples*> record;//一个tuple是指一行的数据内容，这个我得catalog管不着，留给record manager了
     vector<Attribute> Attr;//表的属性栏
-    string getName(){
+    string getName() const
+    {
         return tablename;
     }
     void setName(string tbname)
