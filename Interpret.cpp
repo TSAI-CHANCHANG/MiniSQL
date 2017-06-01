@@ -119,6 +119,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	else
 	{
 		cout << "Error! Doesn't found a instruction key word!";
+		return 0;
 	}
 
 	while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
@@ -144,4 +145,3 @@ int main(int argc, char *argv[])
 	getchar();
 	return 0;
 }
-
