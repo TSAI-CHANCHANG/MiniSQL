@@ -8,13 +8,13 @@ class catalogmanager
 {
 public:
     catalogmanager();
-    void CreateTable(String Tablename, String Attributes);
-    void DropTable(String Tablename);
-    void DropIndex(String Indexname);
-    void CreateIndex(String Indexname, String Tablename, String Attrname);
+    void CreateTable(string Tablename, string Attributes);
+    void DropTable(string Tablename);
+    void DropIndex(string Indexname);
+    void CreateIndex(string Indexname, string Tablename, string Attrname);
 private:
     buffermanager buf;
-    Table GetTable(String Tablename);
+    Table GetTable(string Tablename);
     void SetTable(const Table& tab);
 };
 
