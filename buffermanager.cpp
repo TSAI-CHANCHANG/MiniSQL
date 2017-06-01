@@ -56,8 +56,8 @@ void buffermanager::WriteBack(int blocknum)
     //将一个块写回文件
     if (!blocks[blocknum].used) return;
     const char* filename = blocks[blocknum].filename.c_str();
-    fstream File(filename);
-    if (!File.is_open())
+    fstream File(filename, std::ios::out | std::ios::ate);
+    if (!File)
     {
         string ex_info = "file named " + blocks[blocknum].filename + " open failed!";
         throw runtime_error(ex_info);
@@ -100,7 +100,7 @@ void buffermanager::WriteIn(string fileName, int offset, int blocknum)
 {
     //将这个块的内容从文件中写入
     const char* filename = fileName.c_str();
-    fstream File(filename);
+    fstream File(filename, std::ios::in | std::ios::app);
     if (!File.is_open())
     {
         string ex_info = "file named " + fileName + " open failed!";

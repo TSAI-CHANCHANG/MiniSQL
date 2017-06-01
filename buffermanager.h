@@ -15,12 +15,12 @@ private:
     bool dirty;
     bool pin;
     bool used;
-    int usedsize;//已经使用的size
     time_t Recenttime;//最近使用时间
 
 public:
     string filename;//对应文件名
     int fileoffset;//对应在文件中的第几个block
+    int usedsize;//已经使用的size
     char content[BLOCKSIZE+1];
 
     void ClearBlock();
