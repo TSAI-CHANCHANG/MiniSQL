@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <vector>
 using namespace std;
 
 #define ERROR       -1
@@ -13,3 +15,20 @@ using namespace std;
 #define QUIT         5
 #define EXEC         6
 string getInput();
+
+class condition
+{
+	int instructionType;
+	vector <string> colName;
+	string tableName;
+	string indexName;
+	vector <string> whereClause;
+public:
+	condition() : instructionType(NULL) {}
+	~condition() {}
+	inline void setInstruction(int type) { instructionType = type; }//set the instruction type
+	inline void setColName(const string &col) { colName.push_back(col); }
+	inline void setTableName(const string &table) { tableName = table; }
+	inline void setIndexName(const string &index) { indexName = index; }
+	inline void setWhereClause(const string &whereC) { whereClause.push_back(whereC); }
+};
