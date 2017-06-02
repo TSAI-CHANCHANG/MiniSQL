@@ -134,8 +134,8 @@ int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrn
         if (tab.Attr[i].attrname==Attrname)//找到对应表的对应attribute
         {
             tab.Attr[i].indexname = Indexname;
-            string filename = tab.Attr[i].indexname+".idx";
-            BT.CreateIndex(&tab.Attr[i].attrname,&filename,tab.Attr[i].type);
+            string filename = tab.Attr[i].indexname+".rec";
+            BT.CreateIndex(&tab.Attr[i].attrname,&filename,tab.Attr[i].type);//!!!不确定能不能这么玩，等record回应！！！
             break;
         }
     if (i==tab.Attrnum){
@@ -234,8 +234,8 @@ int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& 
     if (tab.primary!=-1)
     {
         tab.Attr[tab.primary].indexname=tab.Attr[tab.primary].attrname;
-        string filename = tab.Attr[tab.primary].indexname+".idx";
-        BT.CreateIndex(&tab.Attr[tab.primary].attrname,&filename,tab.Attr[tab.primary].type);
+        //string filename = tab.Attr[tab.primary].indexname+".rec";
+        //BT.CreateIndex(&tab.Attr[tab.primary].attrname,&filename,tab.Attr[tab.primary].type);
     }
     SetTable(tab);//将这个表的内容存回文件中
     return SUCCESS;
