@@ -13,7 +13,7 @@ public:
     bool primary;//这个属性是否是primary
     bool unique;//这个属性是否是unique
     string indexname;//这个属性的indexname，没有就是"noindex"
-    void defAtt(string attDef);
+    int defAtt(string attDef);
     Attribute():primary(false),unique(false),indexname("noindex"){}
 };
 
@@ -45,7 +45,7 @@ private:
 
 };
 //这个表的catalog在文件中应该是：
-//tablename blocknum attrnum primary Attrname1 Attrtype1 attrlength1 primary1(bool) unique1(bool) index1(bool) Attrname2 Attrtype2……
+//tablename blocknum attrnum primary Attrname1 Attrtype1 attrlength1 primary1(bool) indexname1(string) unique1(bool)  Attrname2 Attrtype2……
 
 
 #endif // TABLE_H
