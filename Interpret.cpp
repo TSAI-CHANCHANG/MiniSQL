@@ -7,22 +7,7 @@
 static char address[1000];
 static ifstream ifs;
 using namespace std;
-class condition
-{
-	int instructionType;
-	vector <string> colName;
-	string tableName;
-	string indexName;
-	vector <string> whereClause;
-public:
-	condition(): instructionType(NULL) {}
-	~condition() {}
-	inline void setInstruction(int type) { instructionType = type; }//set the instruction type
-	inline void setColName(const string &col) { colName.push_back(col); }
-	inline void setTableName(const string &table) { tableName = table; }
-	inline void setIndexName(const string &index) { indexName = index; }
-	inline void setWhereClause(const string &whereC) { whereClause.push_back(whereC); }
-};
+
 /////////////////////////////////////////////////
 /////Function No. 1:
 /////get the user input 
@@ -46,19 +31,93 @@ string getInput()
 	}
 	return SQLSentence;
 }
+
 /////////////////////////////////////////////////
 /////Function No. 2:
 /////analusis the select clause then change the object of condition class 
-void select_clause()
+int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condition &SQLCondition)
 {
+	string currentWord;
+	SQLCondition.setInstruction(SELECT);
+	if ((end = SQLSentence.find(" from", SQLCurrentPointer)) == -1)//find " from"
+	{
+		cout << "Error! Can not find key words \"from\"." << endl;//can not find from
+		return ERROR;
+	}
+	while (SQLSentence[end] == ' ')//select xxx from ooo, this is to find where is the end of xxx
+		--end;
+	while (SQLSentence[SQLCurrentPointer] == ' ' && end >= SQLCurrentPointer)//select xxx from ooo, this is to find where is the front of xxx
+		++SQLCurrentPointer;
+	end++;//adjust the pointer to the space right after xxx
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+	if (currentWord.empty() == 1)//can not find col name
+	{
+		cout << "Error! Can not find col name." << endl;
+		return ERROR;
+	}
+	if (currentWord != "*")
+	{
+		int f = 0, e = 0;
+		string col;
+		while (e < currentWord.size())
+		{
+			if (currentWord[e] == ' ')
+			{
+				int flag = 0;
+				if (currentWord[e - 1] != ',')
+					flag = 1;
+				while (currentWord[e] == ' ' && e < currentWord.size())
+					++e;
+				if (flag && currentWord[e] != ',')
+				{
+					cout << "Error! col name must be separated by \',\'.";
+					return ERROR;
+				}
+				else if (currentWord[e] == ',')
+					f = ++e;
+				else
+					f = e;
+			}
+			while (currentWord[e] != ',' && currentWord[e] != ' ' && e < currentWord.size())
+				++e;
+			col = currentWord.substr(f, e - f);
+			SQLCondition.setColName(col);
+			f = e + 1;//move to next col
+			if (currentWord[e] == ',')
+				++e;
+			if (currentWord[e] == ' ')
+			{
+				int flag = 0;
+				if (currentWord[e - 1] != ',')
+					flag = 1;
+				while (currentWord[e] == ' ' && e <= currentWord.size())
+					++e;
+				if (e + 1 == currentWord.size() && flag == 1)
+				{
+					cout << "Error! col name has syntax error." << endl;
+					return ERROR;
+				}
+				if (flag && currentWord[e] != ',')
+				{
+					cout << "Error! col name must be separated by \',\'.";
+					return ERROR;
+				}
+				else if (currentWord[e] == ',')
+					f = ++e;
+				else
+					f = e;
+			}
+		}
 
+	}
+	return SELECT;
 }
 
-int interpreter(string &SQLSentence, int &fileReadFlag)
+int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 {
 	string firstWord;
 	int SQLCurrentPointer = 0, end = 0;
-
+	int code = 0;
 
 
 	//////////////////////input part/////////////////////////////////////////////
@@ -85,7 +144,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	end = SQLSentence.find(' ', SQLCurrentPointer);
 	if (end == -1)
 	{
-		end = SQLSentence.find(';', SQLCurrentPointer);
+		end = SQLSentence.find(';', SQLCurrentPointer);//example:"quit;", then there does not have a ' '.
 	}
 	firstWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);//get the first word from SQL sentence
 	SQLCurrentPointer = end;//pointer move forward
@@ -95,7 +154,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	///////start to analysis the sentence
 	if (firstWord == "select")
 	{
-		
+		code = select_clause(SQLSentence, SQLCurrentPointer, end, SQLCondition);
 	}
 	else if (firstWord == "insert")
 	{
@@ -104,12 +163,12 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	else if (firstWord == "quit")
 	{
 		string nextWord;
-		while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
+		while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' after the first word
 			SQLCurrentPointer++;
-		end = SQLSentence.find(' ', SQLCurrentPointer);
+		end = SQLSentence.find(' ', SQLCurrentPointer);//get the next word
 		nextWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);//check whether the quit instruction
-																				  //has other words
-		if (nextWord == ";")			
+																				  //has other words. example:"quit select;"
+		if (nextWord == ";")//we can only find ';'	
 			return QUIT_NUMBER;
 		else
 			cout << "Error! Quit instruction should has only one key word \"quit\"\n";
@@ -118,16 +177,18 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	{
 
 	}
-	else if (firstWord == "exec")
+	else if (firstWord == "exec")//execute the script
 	{
 		string temp;
 		while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
 			SQLCurrentPointer++;
 		end = SQLSentence.find(' ', SQLCurrentPointer);
-		temp = SQLSentence.substr(SQLCurrentPointer + 1, end - SQLCurrentPointer - 2);/////warning！！！！！！
-		strcpy(address, temp.c_str());
-		if (freopen(address, "r", stdin) == 0)
-			cout << "The file "<< address <<" was not opened\n";    
+		temp = SQLSentence.substr(SQLCurrentPointer + 1, end - SQLCurrentPointer - 2);
+		strcpy(address, temp.c_str());//copy the address to array
+		if (freopen(address, "r", stdin) == 0)//can not open
+		{
+			cout << "The file " << address << " was not opened\n";
+		}  
 		else
 		{
 			cout << "The file " << address << " was opened\n";
@@ -146,22 +207,24 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 		return 0;
 	}
 
-	while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
+	while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' in the rest fo the sentence
 		SQLCurrentPointer++;
-	while (SQLSentence[SQLCurrentPointer] == ';')//get rid of the ' ' from the beginning of the sentence
+	while (SQLSentence[SQLCurrentPointer] == ';')//find ';'
 		SQLCurrentPointer++;
-	SQLSentence.erase(0, SQLCurrentPointer);
-	return 0;
+	SQLSentence.erase(0, SQLCurrentPointer);//clear
+	return code;
 }
+
 int main(int argc, char *argv[]) // this is just a test main function
 {
 	string SQLSentence;
+	condition SQLCondition;
 	int conditionCode = 0;
 	int stop = 0;
 	int fileReadFlag = 0;
 	while (!stop)
 	{
-		conditionCode = interpreter(SQLSentence, fileReadFlag);
+		conditionCode = interpreter(SQLSentence, fileReadFlag, SQLCondition);
 		if (conditionCode == QUIT_NUMBER)
 			stop = 1;
 	}
