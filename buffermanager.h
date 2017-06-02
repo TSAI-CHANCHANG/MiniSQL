@@ -53,6 +53,9 @@ public:
     void DeleteFile(string filename);
     //drop表或者索引的时候用，将文件删除（同时删除内存中的缓冲区）
 
+    bool FindFile(string filename);
+    //查找文件
+
     void DirtBlock(int blocknum);
     //把一个Block设为dirty
 

@@ -219,6 +219,17 @@ void buffermanager::DeleteFile(string filename)
     return ;
 }
 
+bool buffermanager::FindFile(string filename)
+{
+    fstream File(filename);
+    if (!File.is_open())
+    {
+        return false;
+    }
+    File.close();
+    return true;
+}
+
 void buffermanager::DeleteBlock(string filename)
 {
     for (int i =0; i< BLOCKNUMBER; i++)
