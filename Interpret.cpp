@@ -124,8 +124,43 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 		SQLCondition.setColName(currentWord);
 	}
 
+	//step6
+	while (SQLSentence[end] == ' ')//select xxx from ooo, this is to find where is the front of from
+		++end;
+	SQLCurrentPointer = end;
 
-	return SELECT;
+	//step7
+	end = SQLSentence.find(' ', SQLCurrentPointer);
+	SQLCurrentPointer = end;
+
+	//step8
+	while (SQLSentence[end] == ' ')//select xxx from ooo, this is to find where is the front of ooo
+		++end;
+	SQLCurrentPointer = end;
+	while (SQLSentence[end] != ';' && SQLSentence[end] != ' ')
+		++end;
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+
+	//step9
+	if (currentWord == ";" || currentWord == "where")
+	{
+		cout << "Error! the table name can not be found" << endl;
+		return ERROR;
+	}
+
+	//step10
+	SQLCondition.setTableName(currentWord);
+	
+	//step11
+	while (SQLSentence[end] == ' ')
+		++end;
+	if (SQLSentence[end] == ';')
+		return SELECT;
+	else
+	{
+		///////to be continued
+		return SELECT;
+	}
 }
 
 int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
