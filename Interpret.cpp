@@ -2,13 +2,27 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-
-#define ERROR       -1
-#define QUIT_NUMBER -2
+#include <vector>
 
 static char address[1000];
 static ifstream ifs;
 using namespace std;
+class condition
+{
+	int instructionType;
+	vector <string> colName;
+	string tableName;
+	string indexName;
+	vector <string> whereClause;
+public:
+	condition(): instructionType(NULL) {}
+	~condition() {}
+	inline void setInstruction(int type) { instructionType = type; }//set the instruction type
+	inline void setColName(const string &col) { colName.push_back(col); }
+	inline void setTableName(const string &table) { tableName = table; }
+	inline void setIndexName(const string &index) { indexName = index; }
+	inline void setWhereClause(const string &whereC) { whereClause.push_back(whereC); }
+};
 /////////////////////////////////////////////////
 /////Function No. 1:
 /////get the user input 
@@ -32,11 +46,20 @@ string getInput()
 	}
 	return SQLSentence;
 }
+/////////////////////////////////////////////////
+/////Function No. 2:
+/////analusis the select clause then change the object of condition class 
+void select_clause()
+{
+
+}
 
 int interpreter(string &SQLSentence, int &fileReadFlag)
 {
 	string firstWord;
 	int SQLCurrentPointer = 0, end = 0;
+
+
 
 	//////////////////////input part/////////////////////////////////////////////
 	if (SQLSentence.empty() && fileReadFlag == 1)//the sentence is empty and now it is time to read file
@@ -66,12 +89,13 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	}
 	firstWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);//get the first word from SQL sentence
 	SQLCurrentPointer = end;//pointer move forward
-	errno_t  err;
+
+
+
 	///////start to analysis the sentence
 	if (firstWord == "select")
 	{
-		while (SQLSentence[SQLCurrentPointer] != ';')//get rid of the ';' from the beginning of the sentence
-			SQLCurrentPointer++;
+		
 	}
 	else if (firstWord == "insert")
 	{
@@ -116,7 +140,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	{
 
 	}
-	else
+	else//input is wrong
 	{
 		cout << "Error! Doesn't found a instruction key word!";
 		return 0;
@@ -129,7 +153,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag)
 	SQLSentence.erase(0, SQLCurrentPointer);
 	return 0;
 }
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[]) // this is just a test main function
 {
 	string SQLSentence;
 	int conditionCode = 0;
