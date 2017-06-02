@@ -60,6 +60,7 @@ int catalogmanager::DropTable(string Tablename, BPLUSTREE& BT)
             BT.DropIndex(&filename);
         }
     }
+    buf.DeleteFile(Tablename+".rec");//删表的内容
     buf.DeleteFile(Tablename+".tab");//删表
     return SUCCESS;
 }
@@ -105,6 +106,7 @@ void catalogmanager::SetTable(Table& tab)
         if (strout.tellp()+length>BLOCKSIZE)//如果这个block放不下了
         {
             strcpy(blocks[blocknum].content,table);//将字符流内容拷进来
+            blocks[blocknum].SetBlock(tab.getName()+".tab",i);
             buf.DirtBlock(blocknum);//这个块已经被修改过了
             i++;
             blocknum = buf.FindBlockinBuffer(tab.getName()+".tab",i);//再找个块来
@@ -114,11 +116,32 @@ void catalogmanager::SetTable(Table& tab)
              <<' '<<tab.Attr[j].indexname<<' '<<tab.Attr[j].unique;//将attribute的信息输入字符流
     }
     strcpy(blocks[blocknum].content,table);//最后一个块
+    blocks[blocknum].SetBlock(tab.getName()+".tab",i);
+    buf.DirtBlock(blocknum);
 
     tab.blocknum = i;
-    strout.seekp(0);
-    strout<<tab.getName()<<" "<<tab.blocknum<<' '<<tab.Attrnum<<" "<<tab.primary;//blocknum数量有误，确定之后重新输入一次
+
+    strout<<tab.getName()<<" "<<tab.blocknum<<' '<<tab.Attrnum<<" "<<tab.primary;//将名字等基本信息输入字符流
+
+    for (int j = 0;j<tab.Attrnum;j++)
+    {
+        int length = tab.Attr[j].attrname.length()+tab.Attr[j].indexname.length()+4;//估测的占用字节流的长度
+        if (strout.tellp()+length>BLOCKSIZE)//如果这个block放不下了
+        {
+            strcpy(blocks[blocknum].content,table);//将字符流内容拷进来
+            blocks[blocknum].SetBlock(tab.getName()+".tab",i);
+            buf.DirtBlock(blocknum);//这个块已经被修改过了
+            i++;
+            blocknum = buf.FindBlockinBuffer(tab.getName()+".tab",i);//再找个块来
+            strout.seekp(0);
+        }
+        strout<<' '<<tab.Attr[j].attrname<<' '<<tab.Attr[j].type<<' '<<tab.Attr[j].length<<' '<<tab.Attr[j].primary
+             <<' '<<tab.Attr[j].indexname<<' '<<tab.Attr[j].unique;//将attribute的信息输入字符流
+    }
+    strcpy(blocks[blocknum].content,table);//最后一个块
+    blocks[blocknum].SetBlock(tab.getName()+".tab",i);
     buf.DirtBlock(blocknum);
+    return;
 }
 
 //建立索引（将这个index对应的表的对应的attribute上的indexname设为indexname）
