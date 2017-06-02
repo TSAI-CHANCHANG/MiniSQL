@@ -38,24 +38,33 @@ string getInput()
 int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condition &SQLCondition)
 {
 	string currentWord;
+	//step1
 	SQLCondition.setInstruction(SELECT);
+
+	//step2
 	if ((end = SQLSentence.find(" from", SQLCurrentPointer)) == -1)//find " from"
 	{
 		cout << "Error! Can not find key words \"from\"." << endl;//can not find from
 		return ERROR;
 	}
+
+	//step3
 	while (SQLSentence[end] == ' ')//select xxx from ooo, this is to find where is the end of xxx
 		--end;
 	while (SQLSentence[SQLCurrentPointer] == ' ' && end >= SQLCurrentPointer)//select xxx from ooo, this is to find where is the front of xxx
 		++SQLCurrentPointer;
 	end++;//adjust the pointer to the space right after xxx
 	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+
+	//step4
 	if (currentWord.empty() == 1)//can not find col name
 	{
 		cout << "Error! Can not find col name." << endl;
 		return ERROR;
 	}
-	if (currentWord != "*")
+
+	//step5
+	if (currentWord != "*")//not select all col name
 	{
 		int f = 0, e = 0;
 		string col;
@@ -110,6 +119,12 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 		}
 
 	}
+	else
+	{
+		SQLCondition.setColName(currentWord);
+	}
+
+
 	return SELECT;
 }
 
