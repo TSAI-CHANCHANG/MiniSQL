@@ -45,6 +45,8 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	if ((end = SQLSentence.find(" from", SQLCurrentPointer)) == -1)//find " from"
 	{
 		cout << "Error! Can not find key words \"from\"." << endl;//can not find from
+		end = SQLSentence.find(";", SQLCurrentPointer);
+		SQLCurrentPointer = end;
 		return ERROR;
 	}
 
@@ -60,6 +62,8 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	if (currentWord.empty() == 1)//can not find col name
 	{
 		cout << "Error! Can not find col name." << endl;
+		end = SQLSentence.find(";", SQLCurrentPointer);
+		SQLCurrentPointer = end;
 		return ERROR;
 	}
 
@@ -79,7 +83,9 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 					++e;
 				if (flag && currentWord[e] != ',')
 				{
-					cout << "Error! col name must be separated by \',\'.";
+					cout << "Error! col name must be separated by \',\'." << endl;
+					end = SQLSentence.find(";", SQLCurrentPointer);
+					SQLCurrentPointer = end;
 					return ERROR;
 				}
 				else if (currentWord[e] == ',')
@@ -104,11 +110,15 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 				if (e + 1 == currentWord.size() && flag == 1)
 				{
 					cout << "Error! col name has syntax error." << endl;
+					end = SQLSentence.find(";", SQLCurrentPointer);
+					SQLCurrentPointer = end;
 					return ERROR;
 				}
 				if (flag && currentWord[e] != ',')
 				{
-					cout << "Error! col name must be separated by \',\'.";
+					cout << "Error! col name must be separated by \',\'." << endl;
+					end = SQLSentence.find(";", SQLCurrentPointer);
+					SQLCurrentPointer = end;
 					return ERROR;
 				}
 				else if (currentWord[e] == ',')
@@ -152,6 +162,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	if (currentWord.empty() || currentWord == "where")
 	{
 		cout << "Error! the table name can not be found" << endl;
+		end = SQLSentence.find(";", SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
 	}
@@ -363,8 +374,8 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 			SQLCurrentPointer++;
 
 	}
-	
-	SQLSentence.erase(0, SQLCurrentPointer);//clear
+	end = SQLSentence.find(';', 0);
+	SQLSentence.erase(0, end + 1);//clear
 	return code;
 }
 
