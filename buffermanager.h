@@ -21,6 +21,7 @@ public:
     int usedsize;//已经使用的size
     char content[BLOCKSIZE+1];
 
+
     void ClearBlock();
     //将这个块恢复初始化状态
 
