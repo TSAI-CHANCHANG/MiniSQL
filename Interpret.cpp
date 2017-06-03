@@ -131,6 +131,13 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 
 	//step7
 	end = SQLSentence.find(' ', SQLCurrentPointer);
+	if (end == -1)
+	{
+		cout << "Error! Can not find table name." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
 	SQLCurrentPointer = end;
 
 	//step8
@@ -142,7 +149,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
 
 	//step9
-	if (currentWord == ";" || currentWord == "where")
+	if (currentWord.empty() || currentWord == "where")
 	{
 		cout << "Error! the table name can not be found" << endl;
 		return ERROR;
@@ -150,10 +157,10 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 
 	//step10
 	SQLCondition.setTableName(currentWord);
-	
 	//step11
 	while (SQLSentence[end] == ' ')
 		++end;
+	SQLCurrentPointer = end;
 	if (SQLSentence[end] == ';')
 		return SELECT;
 	else
@@ -163,6 +170,36 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	}
 }
 
+/////////////////////////////////////////////////
+/////Function No. 3:
+/////analusis the drop clause then change the object of condition class 
+int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition)
+{
+	string currentWord;
+	//step1
+	SQLCondition.setInstruction(DROP);
+
+	//step2
+	end = SQLSentence.find("table", SQLCurrentPointer);
+	if (end != -1)//create table
+	{
+		SQLCurrentPointer = end;//move pointer to 't'("drop table oooo")
+		while (SQLSentence[end] != ' ' && end < SQLSentence.size())//move across "table"
+			++end;
+		while (SQLSentence[end] == ' ' && end < SQLSentence.size())
+			++end;
+		if (SQLSentence[end] == ';')//lose table name
+		{
+			cout << "Error! can not find table name." << endl;
+			return ERROR;
+		}
+
+	}
+	else//create index
+	{
+
+	}
+}
 int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 {
 	string firstWord;
@@ -176,7 +213,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 		getline(ifs, SQLSentence);
 		if (SQLSentence.empty())//the file has come to end, but doesn't have a quit command;
 		{
-			cout << "ERROR! This file doesn't have a quit command\n";
+			cout << "ERROR! This file doesn't have a quit command\n" << endl;
 			fileReadFlag = 0;//back to keyboard input
 			SQLSentence = "";
 			ifs.close();
@@ -249,18 +286,24 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	}
 	else if (firstWord == "drop")
 	{
-
+		code = drop_clause(SQLSentence, SQLCurrentPointer, end, SQLCondition);
 	}
 	else//input is wrong
 	{
 		cout << "Error! Doesn't found a instruction key word!";
-		return 0;
+		return ERROR;
 	}
+	if (SQLSentence[SQLCurrentPointer + 1] == ';')
+		SQLCurrentPointer += 2;
+	else
+	{
+		while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' in the rest fo the sentence
+			SQLCurrentPointer++;
+		while (SQLSentence[SQLCurrentPointer] == ';')//find ';'
+			SQLCurrentPointer++;
 
-	while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' in the rest fo the sentence
-		SQLCurrentPointer++;
-	while (SQLSentence[SQLCurrentPointer] == ';')//find ';'
-		SQLCurrentPointer++;
+	}
+	
 	SQLSentence.erase(0, SQLCurrentPointer);//clear
 	return code;
 }
