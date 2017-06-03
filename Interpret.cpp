@@ -152,6 +152,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	if (currentWord.empty() || currentWord == "where")
 	{
 		cout << "Error! the table name can not be found" << endl;
+		SQLCurrentPointer = end;
 		return ERROR;
 	}
 
@@ -176,29 +177,88 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition)
 {
 	string currentWord;
-	//step1
-	SQLCondition.setInstruction(DROP);
 
-	//step2
+	//step1
 	end = SQLSentence.find("table", SQLCurrentPointer);
 	if (end != -1)//create table
 	{
+		SQLCondition.setInstruction(DROP_TABLE);
 		SQLCurrentPointer = end;//move pointer to 't'("drop table oooo")
 		while (SQLSentence[end] != ' ' && end < SQLSentence.size())//move across "table"
 			++end;
-		while (SQLSentence[end] == ' ' && end < SQLSentence.size())
+		while (SQLSentence[end] == ' ' && end < SQLSentence.size())// get rid of ' '
 			++end;
 		if (SQLSentence[end] == ';')//lose table name
 		{
 			cout << "Error! can not find table name." << endl;
+			SQLCurrentPointer = end;
 			return ERROR;
 		}
-
+		SQLCurrentPointer = end;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		if(SQLSentence[end - 1] == ' ')
+			--end;
+		while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)// get rid of ' '
+			--end;
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);//get table name
+		
+		//set tableName
+		SQLCondition.setTableName(currentWord);
+		SQLCurrentPointer = end;
 	}
 	else//create index
 	{
+		end = SQLSentence.find("index", SQLCurrentPointer);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key word 'table' or 'index'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		SQLCondition.setInstruction(DROP_INDEX);
+		////
+		end = SQLSentence.find(" on", SQLCurrentPointer);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key word /'on'/." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		SQLCurrentPointer++;
+		while (SQLSentence[SQLCurrentPointer] != ' ')//across index
+			SQLCurrentPointer++;
+		while (SQLSentence[SQLCurrentPointer] == ' ')
+			SQLCurrentPointer++;
+		while (end > SQLCurrentPointer && SQLSentence[end] == ' ')
+			--end;
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
 
+		if (currentWord.empty())
+		{
+			cout << "Error! Can not find index name." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		SQLCondition.setIndexName(currentWord);
+		end = SQLSentence.find("on", SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		while (SQLSentence[SQLCurrentPointer] != ' ')//across on
+			SQLCurrentPointer++;
+		while (SQLSentence[SQLCurrentPointer] == ' ')
+			SQLCurrentPointer++;
+		end = SQLSentence.find(";", SQLCurrentPointer);
+		--end;
+		while (end > SQLCurrentPointer && SQLSentence[end] == ' ')
+			--end;
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
+		SQLCondition.setTableName(currentWord);
+		SQLCurrentPointer = ++end;
 	}
+	return DROP;
 }
 int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 {
@@ -290,7 +350,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	}
 	else//input is wrong
 	{
-		cout << "Error! Doesn't found a instruction key word!";
+		cout << "Error! Doesn't found a instruction key word!" << endl;
 		return ERROR;
 	}
 	if (SQLSentence[SQLCurrentPointer + 1] == ';')
@@ -322,6 +382,7 @@ int main(int argc, char *argv[]) // this is just a test main function
 			stop = 1;
 	}
 	cout << "Press Any Key to Continue..." << endl;
+	getchar();
 	getchar();
 	return 0;
 }
