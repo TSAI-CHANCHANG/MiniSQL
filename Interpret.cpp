@@ -271,6 +271,113 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 	}
 	return DROP;
 }
+
+/////////////////////////////////////////////////
+/////Function No. 3:
+/////analusis the insert clause then change the object of condition class 
+int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition)
+{
+	string currentWord;
+	//step0
+	SQLCondition.setInstruction(INSERT);
+
+	//step1
+	while (SQLSentence[SQLCurrentPointer] == ' ')//move to next word
+		++SQLCurrentPointer;
+	
+	//step2
+	if (SQLSentence[SQLCurrentPointer] == ';')
+	{
+		cout << "Error! Can not find key word 'into'." << endl;
+		end = SQLCurrentPointer;
+		return ERROR;
+	}
+
+	//step3
+	end = SQLCurrentPointer;
+	while (SQLSentence[end] != ' ' && SQLSentence[end] != ';')
+		++end;
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+	if (currentWord != "into")
+	{
+		cout << "Error! Can not find key word 'into'." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	
+	//step4
+	SQLCurrentPointer = end;
+	end = SQLSentence.find(" values", SQLCurrentPointer);
+	if (end == -1)
+	{
+		cout << "Error! Can not find key word 'values'." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)
+		--end;
+	end += 1;
+	while (SQLSentence[SQLCurrentPointer] == ' ' && end > SQLCurrentPointer)
+		++SQLCurrentPointer;
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+
+	if(currentWord.empty())
+	{
+		cout << "Error! Can not find table name." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	SQLCondition.setTableName(currentWord);
+
+	//step5
+	end = SQLSentence.find("values", SQLCurrentPointer);
+	while (SQLSentence[end] != ' ' && SQLSentence[end] != ';')
+		++end;
+	if (SQLSentence[end] == ';')
+	{
+		cout << "Error! Can not find insert values." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+
+	//step6
+	SQLCurrentPointer = SQLSentence.find('(');
+	if (SQLCurrentPointer == -1)
+	{
+		cout << "Error! Can not find '('." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	end = SQLSentence.find(')');
+	if (end == -1)
+	{
+		cout << "Error! Can not find ')'." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	if (SQLSentence[SQLCurrentPointer + 1] == '(')
+	{
+		cout << "Error! the InsertValues is empty." << endl;
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	++SQLCurrentPointer;
+	--end;
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+	SQLCondition.setInsertValues(currentWord);
+	//step7,end
+	end = SQLSentence.find(';', SQLCurrentPointer);
+	SQLCurrentPointer = end;
+	return INSERT;
+}
+
 int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 {
 	string firstWord;
@@ -316,7 +423,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	}
 	else if (firstWord == "insert")
 	{
-
+		code = insert_clause(SQLSentence, SQLCurrentPointer, end, SQLCondition);
 	}
 	else if (firstWord == "quit")
 	{
@@ -393,7 +500,5 @@ int main(int argc, char *argv[]) // this is just a test main function
 			stop = 1;
 	}
 	cout << "Press Any Key to Continue..." << endl;
-	getchar();
-	getchar();
 	return 0;
 }
