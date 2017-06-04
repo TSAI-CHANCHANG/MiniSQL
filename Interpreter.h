@@ -14,6 +14,8 @@ using namespace std;
 #define INSERT       4
 #define QUIT         5
 #define EXEC         6
+#define DROP_TABLE   7
+#define DROP_INDEX   8
 string getInput();
 
 class condition
@@ -23,6 +25,7 @@ class condition
 	string tableName;
 	string indexName;
 	vector <string> whereClause;
+	string insertValues;
 public:
 	condition() : instructionType(NULL) {}
 	~condition() {}
@@ -31,4 +34,6 @@ public:
 	inline void setTableName(const string &table) { tableName = table; }
 	inline void setIndexName(const string &index) { indexName = index; }
 	inline void setWhereClause(const string &whereC) { whereClause.push_back(whereC); }
+	inline void clearClass() { instructionType = 0; colName.clear(); tableName = ""; indexName = ""; whereClause.clear(); }
+	inline void setInsertValues(const string &insertV) { insertValues = insertV; }
 };
