@@ -3,6 +3,7 @@
 
 #include <strstream>
 #include<iostream>
+#include<fstream>
 
 #define MAXINT 32767;
 
@@ -144,6 +145,56 @@ void catalogmanager::SetTable(Table& tab)
     return;
 }
 
+void catalogmanager::CreateEmptyFile(string fileName)
+{
+    const char* filename = fileName.c_str();
+    fstream File(filename, std::ios::in|ios::app);
+    File.close();
+}
+
+//把建立索引要用的那些东西都找来放在一个.idx文件中
+void catalogmanager::PrepareForIndex(string FromFile, string ToFile, int tpnum, const Table& tab)
+{
+    fstream fs(ToFile.c_str(),ios::app);
+    for (int i = 0;i<=tab.blocknum;i++)
+    {
+        int blocknum = buf.FindBlockinBuffer(FromFile,i);
+        //cout<<blocks[blocknum].content[0]<<blocks[blocknum].content[13]<<blocks[blocknum].content[29]<<endl;
+        string str = blocks[blocknum].content;
+
+        istrstream STR(str.c_str(),str.length());
+        int l = STR.tellg();
+        STR.seekg(0,ios::end);
+        l = STR.tellg()-l;
+        STR.seekg(0,ios::beg);
+        STR.clear();
+
+        vector<int> pos;
+        pos.push_back(0);
+        int post = 0;
+        while ((post = str.find('\n',post))!=-1)
+            pos.push_back(++post);
+
+        int count = 0;
+        while (1)
+        {
+            for (int j = 0; j<tab.Attrnum;j++)
+            {
+                string element;
+                STR>>element;
+                if (STR.tellg()>=l||STR.tellg()==-1) break;
+                if (j==tpnum)
+                {
+                    fs<<element<<" "<<i<<" "<<pos[count++]<<"\n";
+                    //文件中是 key blocknum offset（这个offset是这一个tuple的起始位置）
+                }
+            }
+            if (STR.tellg()>=l||STR.tellg()==-1) break;
+        }
+    }
+    fs.close();
+}
+
 //建立索引（将这个index对应的表的对应的attribute上的indexname设为indexname）
 int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrname, BPLUSTREE& BT)
 {
@@ -156,9 +207,23 @@ int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrn
     for (i = 0; i<tab.Attrnum;i++)
         if (tab.Attr[i].attrname==Attrname)//找到对应表的对应attribute
         {
+            if (tab.Attr[i].indexname!="noindex")
+            {
+                cout<<"Has been existed!"<<endl;
+                return HAVE_SUCH_INDEX;
+            }
+
+            if (!tab.Attr[i].unique)
+            {
+                cout<<"It's not unique!"<<endl;
+                return CONSTRAINT_VIOLATION;
+            }
+
             tab.Attr[i].indexname = Indexname;
-            string filename = tab.Attr[i].indexname+".rec";
-            BT.CreateIndex(&tab.Attr[i].attrname,&filename,tab.Attr[i].type);//!!!不确定能不能这么玩，等record回应！！！
+            string filename = tab.Attr[i].indexname+".idx";
+            PrepareForIndex(tab.getName()+".rec",filename,i,tab);
+
+            BT.CreateIndex(&tab.Attr[i].attrname,&filename,tab.Attr[i].type);
             break;
         }
     if (i==tab.Attrnum){
@@ -257,8 +322,16 @@ int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& 
     if (tab.primary!=-1)
     {
         tab.Attr[tab.primary].indexname=tab.Attr[tab.primary].attrname;
-        //string filename = tab.Attr[tab.primary].indexname+".rec";
-        //BT.CreateIndex(&tab.Attr[tab.primary].attrname,&filename,tab.Attr[tab.primary].type);
+
+        //primary key自动建立索引，但是是空的
+
+        string filename = tab.getName()+".rec";
+        CreateEmptyFile(filename);
+
+        filename = tab.Attr[tab.primary].indexname+".idx";
+        CreateEmptyFile(filename);
+
+        BT.CreateIndex(&tab.Attr[tab.primary].attrname,&filename,tab.Attr[tab.primary].type);
     }
     SetTable(tab);//将这个表的内容存回文件中
     return SUCCESS;

@@ -46,8 +46,9 @@ public:
     char* GetDetail(int blocknum, int blockoffset);
     //给出blocknum和blockoffset，得到对应的指针
 
-    int FindSuitBlockinBuffer(string fileName, int size);
-    //给出文件名和需要插入的数据大小，返回一个足够在末端插入这个数据量的块
+    void FindSuitBlockinBuffer(string fileName, int size, int* blocknum, int * blockoffset);
+    //给出文件名和需要插入的数据大小，返回一个足够在末端插入这个数据量的块和可以插入的offset
+    //返回值是后面两个指针
 
     int DeleteFile(string filename);
     //drop表或者索引的时候用，将文件删除（同时删除内存中的缓冲区）
@@ -61,7 +62,7 @@ public:
     void PinBlock(int blocknum);
     //将一个block固定住，设为不能修改
 
-    int Insert(int blocknum, char* data);
+    int Insert(int blocknum, int offset, char* data);
     //在编号为blocknum的块最后插入data
 
     int Delete(int blocknum, int blockoffset, int size);

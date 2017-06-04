@@ -30,8 +30,14 @@ public:
     Table GetTable(string Tablename);
     //通过缓存，从文件中获得一个表
 
+    void PrepareForIndex(string FromFile, string ToFile, int tpnum, const Table& tab);
+
 private:
     buffermanager buf;
+
+    void CreateEmptyFile(string fileName);
+
+
 
     void SetTable(Table& tab);
     //通过缓存，将一个表存回文件中
