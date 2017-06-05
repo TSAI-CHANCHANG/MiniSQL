@@ -349,7 +349,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	if (SQLCurrentPointer == -1)
 	{
 		cout << "Error! Can not find '('." << endl;
-		end = SQLSentence.find(';', SQLCurrentPointer);
+		end = SQLSentence.find(';', 0);
 		SQLCurrentPointer = end;
 		return ERROR;
 	}
