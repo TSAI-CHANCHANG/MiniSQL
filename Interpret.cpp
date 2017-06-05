@@ -378,6 +378,223 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	return INSERT;
 }
 
+/////////////////////////////////////////////////
+/////Function No. 4:
+/////analusis the insert clause then change the object of condition class
+int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition)
+{
+	string currentWord;
+
+	//step1
+	end = SQLSentence.find("table", SQLCurrentPointer);
+
+	if (end != -1) //"table" exists
+	{
+		//step2.a
+		SQLCurrentPointer = end; // adjust the pointer to 't' in table
+		while (SQLSentence[SQLCurrentPointer] != ' ' && SQLSentence[SQLCurrentPointer] != ';' && SQLCurrentPointer <= SQLSentence.size())
+			++SQLCurrentPointer;//across "table"
+		end = SQLSentence.find('(', 0);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key symbol '('." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step3.a
+		--end;//adjust to the space right before the '('
+		while (SQLSentence[end] == ' ' && SQLCurrentPointer < end)
+			--end;
+		if (SQLCurrentPointer == end)
+		{
+			cout << "Error! Can not find table name." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step4.a
+		while (SQLSentence[SQLCurrentPointer] == ' ' && SQLCurrentPointer < end)
+			++SQLCurrentPointer;
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
+		int i = 0;
+		while (currentWord[i] != ' ' && i < currentWord.size())
+			++i;
+		if (i != currentWord.size())
+		{
+			cout << "Error! find a sytnax fault between \"table\" and '('." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		SQLCondition.setTableName(currentWord);
+
+		//step5.a
+		SQLCurrentPointer = SQLSentence.find('(', 0);
+		end = SQLSentence.find(')', SQLCurrentPointer);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key symbol ')'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step6.a
+		if (end == SQLCurrentPointer + 1)
+		{
+			cout << "Error! Can not find attribute." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		
+		//step7.a
+		++SQLCurrentPointer;
+		--end;
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+		SQLCondition.setAttribute(currentWord);
+		return CREATE_TABLE;
+	}
+	else//create "index"?
+	{
+		//step2.b
+		end = SQLSentence.find("index", 0);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key word 'table' or 'index'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step3.b
+		end = SQLSentence.find("on", 0);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key word 'on'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step4.b
+		SQLCurrentPointer = SQLSentence.find("index", 0);
+		while (SQLSentence[SQLCurrentPointer] != ' ' && SQLSentence[SQLCurrentPointer] != ';' && SQLCurrentPointer < SQLSentence.size())
+			++SQLCurrentPointer;//across index
+		
+		//step5.b
+		--end;
+		while (SQLSentence[end] == ' ' && SQLCurrentPointer < end)
+			--end;
+		while (SQLSentence[SQLCurrentPointer] == ' ' && SQLCurrentPointer < end)
+			++SQLCurrentPointer;
+		if (end == SQLCurrentPointer)
+		{
+			cout << "Error! Can not find index name." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step6.b
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
+		int i = 0;
+		while (currentWord[i] != ' ' && i < currentWord.size())
+			++i;
+		if (i != currentWord.size())
+		{
+			cout << "Error! find a sytnax fault between \'index\" and \"on\"." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		SQLCondition.setIndexName(currentWord);
+
+		//step7.b
+		end = SQLSentence.find("on", 0);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key word 'on'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step8.b
+		SQLCurrentPointer = end;
+		while (SQLSentence[SQLCurrentPointer] == 'o')
+			++SQLCurrentPointer;//across 'on'
+
+		//step9.b
+		end = SQLSentence.find('(', 0);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key symbol '('." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step10.b
+		--end;
+		while (SQLSentence[end] == ' ' && SQLCurrentPointer < end)
+			--end;
+		while (SQLSentence[SQLCurrentPointer] == ' ' && SQLCurrentPointer < end)
+			++SQLCurrentPointer;
+		if (end == SQLCurrentPointer)
+		{
+			cout << "Error! Can not find table name." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step11.b
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
+		i = 0;
+		while (currentWord[i] != ' ' && i < currentWord.size())
+			++i;
+		if (i != currentWord.size())
+		{
+			cout << "Error! find a sytnax fault between \"on\" and '('." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		SQLCondition.setTableName(currentWord);
+
+		//step12.b
+		SQLCurrentPointer = SQLSentence.find('(', 0);
+		end = SQLSentence.find(')', SQLCurrentPointer);
+		if (end == -1)
+		{
+			cout << "Error! Can not find key symbol '）'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step14.b
+		if (end == SQLCurrentPointer + 1)
+		{
+			cout << "Error! Can not find attribute." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+
+		//step7.a
+		++SQLCurrentPointer;
+		--end;
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+		SQLCondition.setAttribute(currentWord);
+		return CREATE_INDEX;
+	}
+}
+
 int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 {
 	string firstWord;
@@ -442,6 +659,10 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	{
 
 	}
+	else if (firstWord == "create")
+	{
+		code = create_clause(SQLSentence, SQLCurrentPointer, end, SQLCondition);
+	}
 	else if (firstWord == "exec")//execute the script
 	{
 		string temp;
@@ -498,6 +719,7 @@ int main(int argc, char *argv[]) // this is just a test main function
 		conditionCode = interpreter(SQLSentence, fileReadFlag, SQLCondition);
 		if (conditionCode == QUIT_NUMBER)
 			stop = 1;
+		SQLCondition.clearClass();
 	}
 	cout << "Press Any Key to Continue..." << endl;
 	return 0;
