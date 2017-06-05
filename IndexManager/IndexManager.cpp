@@ -10,15 +10,13 @@ using namespace std;
 BPLUSTREE::BPLUSTREE(int block_size):block_size(block_size)
 {
 	ifstream file("allindex.idx");
-	string file_name, attribute;
+	string file_name;
 	int type;
 	while (1)
 	{
+		file >> file_name;
 		if (file.eof())
 			break;
-		file >> attribute;
-		file >> file_name;
-		index_to_file[attribute] = file_name;
 		file >> type;
 		//cout<<file_name<<" "<<type;//............................
 		if (type == TYPE_INT)
@@ -55,6 +53,7 @@ int BPLUSTREE::CreateTree(int type, string *file_name)
 	{
 		INTNODE *root= new INTNODE();
 		root->father = NULL;
+		root->next = root->prev = NULL;
 		//Create an empty root node and add it into map
 		int_map[*file_name] = root;
 		//cout << "Create a node";//......................................
@@ -62,9 +61,10 @@ int BPLUSTREE::CreateTree(int type, string *file_name)
 		int offset, block;
 		while (1)
 		{
+			index >> key;
 			if (index.eof())
 				break;
-			index >> key >> block >>  offset;
+			index >> block >>  offset;
 			AddNode(type, file_name, &key, block, offset);
 		}
 	}
@@ -83,16 +83,17 @@ int BPLUSTREE::CreateTree(int type, string *file_name)
 		return ERROR_UNKNOWN;
 	}
 	index.close();
-	return 0;
+	return SUCCESS;
 }
 
-int BPLUSTREE::CreateIndex(string * attribute, string * file_name, int type)
+int BPLUSTREE::CreateIndex( string * file_name, int type)
 {
 	//If there exits index on this attribute or with the same index_name
-	ifstream check("allindex.idx");
+	
 	string s1, s2;
 	int temp;
 
+	/*ifstream check("allindex.idx");
 	while (1)
 	{
 		check >> s1;
@@ -106,21 +107,21 @@ int BPLUSTREE::CreateIndex(string * attribute, string * file_name, int type)
 		cout << "Error: Exits index!" << endl;
 		return ERROR_INDEX_EXISTS;
 	}
-	check.close();
+	check.close();*/
 	//Add this index into manager file 
 	ofstream allindex("allindex.idx", ios::app);
 	
-	allindex << *attribute << " " << *file_name << " " << type << endl;
+	allindex << *file_name << " " << type << endl;
 	allindex.close();
 	//Create B+Tree
-	CreateTree(type, file_name);
-
-	return 0;
+	if (CreateTree(type, file_name) < 0)
+		return ERROR_UNKNOWN;
+	return SUCCESS;
 }
 
 int BPLUSTREE::DropIndex(string * file_name)
 {
-	string cmd, attribute, filen;
+	string cmd, filen;
 	
 	cmd = "DEL " + *file_name;
 	system(cmd.c_str());
@@ -132,13 +133,12 @@ int BPLUSTREE::DropIndex(string * file_name)
 	int type;
 	while (1)
 	{
+		old >> filen;
 		if (old.eof())
 			break;
-		old >> attribute;
-		old >> filen;
 		old >> type;
 		if (filen == *file_name) continue;
-		file << attribute << " " << filen << " " << type << endl;
+		file << filen << " " << type << endl;
 	}
 	old.close();
 	file.close();
@@ -146,6 +146,222 @@ int BPLUSTREE::DropIndex(string * file_name)
 	system(cmd.c_str());
 	int_map.erase(*file_name);
 	return 0;
+}
+
+int BPLUSTREE::Insert(int type, string * file_name, string * skey, int block, int offset)
+{
+	stringstream ss(*skey);
+	ofstream record(*file_name, ios::app);
+	int key;
+	ss >> key;
+	record << key << " " << block << " " << offset << endl;
+	record.close();
+	//Add to file
+	if (AddNode(type, file_name, skey, block, offset)==SUCCESS)
+		return SUCCESS;
+	else return ERROR_UNKNOWN;
+}
+
+int BPLUSTREE::Delete(int type, string * file_name, string * lbound, string * rbound, int lopen, int ropen)
+{//1 for open; 0 for close
+	stringstream ls(*lbound), rs(*rbound);
+	string cmd;
+	
+	cmd = "rename " + *file_name + " old.idx";
+	system(cmd.c_str());
+	ifstream old("old.idx");
+	ofstream updated(*file_name);
+	ofstream result("delete.tmp");
+
+	if (type == TYPE_INT)
+	{
+		int lb, rb, key, block, offset;
+
+		ls >> lb;
+		rs >> rb;
+		
+		while (1)
+		{
+			old >> key;
+			if (old.eof())
+				break;
+			old >> block >> offset;
+			if (lopen && ropen)
+				if (key < rb && key > lb)
+					result << block << " " << offset << endl;
+				else
+					updated << key << " " << block << " " << offset << endl;
+			else if (lopen && !ropen)
+				if (key > lb && key <= rb)
+					result << block << " " << offset << endl;
+				else
+					updated << key << " " << block << " " << offset << endl;
+			else if (!lopen && ropen)
+				if (key >= lb && key < rb)
+					result << block << " " << offset << endl;
+				else
+					updated << key << " " << block << " " << offset << endl;
+			else if (!lopen && !ropen)
+				if (key >= lb && key <= rb)
+					result << block << " " << offset << endl;
+				else
+					updated << key << " " << block << " " << offset << endl;
+		}
+		old.close();
+		result.close();
+		updated.close();
+		cmd = "del old.idx";
+		system(cmd.c_str());
+		int_map.erase(*file_name);
+		if (CreateTree(1, file_name) == SUCCESS)
+			return SUCCESS;
+		else return ERROR_UNKNOWN;
+	}
+	else if (type == TYPE_FLOAT)
+	{
+
+	}
+	else if (type == TYPE_CHAR)
+	{
+
+	}
+	else return ERROR_TYPE;
+
+	return SUCCESS;
+}
+
+int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbound, int lopen, int ropen)
+{
+	stringstream ls(*lbound),rs(*rbound);
+
+	if (type == TYPE_INT)
+	{
+		INTNODE *p, *left, *right;
+		int lb, rb, li, ri, i;
+
+		ls >> lb;
+		rs >> rb;
+		//No result
+		if (lb > rb || (lb == rb && (lopen || ropen))) return SUCCESS;
+		p = int_map[*file_name];
+		li = 0;
+		left = right = NULL;
+		//Find the left node
+		while (p->offset.size() == 0)
+		{
+			int i = 0;
+			while (i + 1 < p->key.size() && p->key[i + 1] <= lb)
+				i++;
+			i++;
+			if (p->key[0] > lb) i = 0;
+			p = p->pointer[i];
+		}
+		left = p;
+		if (lopen)//Left open
+		{
+			while (left->key[li] <= lb)
+			{
+				li++;
+				if (li >= left->key.size())
+				{
+					li = 0;
+					if (left->next)
+						left = left->next;
+					else//No result
+						return SUCCESS;
+				}
+			}
+		}
+		else//Left close
+		{
+			while (left->key[li] < lb)
+			{
+				li++;
+				if (li >= left->key.size())
+				{
+					li = 0;
+					if (left->next)
+						left = left->next;
+					else//No result
+						return SUCCESS;
+				}
+			}
+		}
+		//Find the right node
+		p = int_map[*file_name];
+		while (p->offset.size() == 0)
+		{
+			int i = 0;
+			while (i + 1 < p->key.size() && p->key[i + 1] <= rb)
+				i++;
+			i++;
+			if (p->key[0] > rb) i = 0;
+			p = p->pointer[i];
+		}
+		right = p;
+		ri = right->key.size()-1;
+		if (ropen)//Right open
+		{
+			while (right->key[ri] >= rb)
+			{
+				ri--;
+				if (ri < 0)
+				{
+					if (right->prev)
+						right = right->prev;
+					else//No result
+						return SUCCESS;
+					ri = right->key.size() - 1;
+				}
+			}
+		}
+		else//Right close
+		{
+			while (right->key[ri] > rb)
+			{
+				ri--;
+				if (ri < 0)
+				{
+					if (right->prev)
+						right = right->prev;
+					else//No result
+						return SUCCESS;
+					ri = right->key.size() - 1;
+				}
+			}
+		}
+		p = left;
+		i = li;
+		ofstream tmp("select.tmp");
+		while (1)
+		{
+			tmp << p->block[i] << " " << p->offset[i] << endl;
+			if (p == right && i == ri)
+				break;
+			i++;
+			if (i == p->key.size())
+			{
+				i = 0;
+				p = p->next;
+			}
+		}
+		tmp.close();
+	}
+	else if (type == TYPE_FLOAT)
+	{
+
+	}
+	else if (type == TYPE_CHAR)
+	{
+
+	}
+	else
+	{
+		cout << "Error: No such type!" << endl;
+		return ERROR_TYPE;
+	}
+
+	return SUCCESS;
 }
 
 int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int offset)
@@ -160,18 +376,14 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 
 		p = root;
 		ss >> key;
-		//cout << degree << endl;//...........................................
-		//Add to file
-		ofstream record(*file_name,ios::app);
-
-		record << key << " " << block <<  offset << endl;
-		record.close();
+		//cout << degree << endl;//...........................................			
 		//The first node
 		if (root->key.size() == 0)
 		{
 			root->key.push_back(key);
 			root->offset.push_back(offset);
 			root->block.push_back(block);
+			
 			return SUCCESS;
 		}
 		//Add node to a non-empty tree
@@ -187,10 +399,17 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 		int i = 0;
 		while (i + 1 < p->key.size() &&  p->key[i] <= key) i++;
 		if (p->key[i] > key)
+		{
 			p->key.insert(p->key.begin() + i, key);
-		else p->key.push_back(key);
-		p->offset.insert(p->offset.begin() + i, offset);
-		p->block.insert(p->block.begin() + i, block);
+			p->offset.insert(p->offset.begin() + i, offset);
+			p->block.insert(p->block.begin() + i, block);
+		}	
+		else
+		{
+			p->key.push_back(key);
+			p->block.push_back(block);
+			p->offset.push_back(offset);
+		}
 		//Split from leaf
 		while (p->key.size() == degree)
 		{
@@ -201,6 +420,7 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 		
 				t2 = new INTNODE;
 				t1 = new INTNODE;
+				t1->prev = t2->next = t1->next = t2->prev = NULL;
 				//Only root
 				if (p->offset.size() != 0)
 				{
@@ -208,41 +428,42 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 					for (int i = 0; i < (degree + 1)/ 2; i++)
 					{
 						t1->key.push_back(p->key[i]);
-						if (p->offset.size() != 0)
-							t1->offset.push_back(p->offset[i]);
-						if (p->block.size() != 0)
-							t1->block.push_back(p->block[i]);
+						t1->offset.push_back(p->offset[i]);
+						t1->block.push_back(p->block[i]);
 					}
 					//Copy right half  to t2	
 					for (int i = (degree + 1) / 2; i < degree; i++)
 					{
 						t2->key.push_back(p->key[i]);
-						if (p->offset.size() != 0)
-							t2->offset.push_back(p->offset[i]);
-						if (p->block.size() != 0)
-							t2->block.push_back(p->block[i]);
+						t2->offset.push_back(p->offset[i]);
+						t2->block.push_back(p->block[i]);
 					}
 					//Link t1 and t2 as they are leaves
-					t1->pointer.push_back(t2);
+					t1->next = t2;
+					t2->prev = t1;
 					p->key.clear();
 					p->key.push_back(t2->key[0]);
 				}
 				else
-				{
+				{//Root is not leaf
 					//Copy left half to t1
 					for (int i = 0; i < degree / 2; i++)
 					{
 						t1->key.push_back(p->key[i]);
 						t1->pointer.push_back(p->pointer[i]);
+						p->pointer[i]->father = t1;
 					}
+					p->pointer[degree / 2]->father = t1;
 					t1->pointer.push_back(p->pointer[degree / 2]);
 					//Copy right half  to t2
 					for (int i = degree / 2 + 1; i < degree; i++)
 					{
 						t2->key.push_back(p->key[i]);
 						t2->pointer.push_back(p->pointer[i]);
+						p->pointer[i]->father = t2;
 					}
 					t2->pointer.push_back(p->pointer[degree]);
+					p->pointer[degree]->father = t2;
 					//Add one key to root
 					int temp = p->key[degree / 2];
 					p->key.clear();
@@ -266,10 +487,11 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 				{
 					t = new INTNODE;
 					t->father = p->father;
-					if (p->pointer.size() != 0)
-						t->pointer.push_back(p->pointer[0]);
-					p->pointer.clear();
-					p->pointer.push_back(t);
+					t->next = p->next;
+					p->next = t;
+					if (t->next)
+						t->next->prev = t;
+					t->prev = p;
 					//Cut [m/2] to m-1 to t
 					int temp = (degree + 1) / 2;
 					while (p->key.size() > temp)
@@ -302,10 +524,12 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 					{
 						t->key.push_back(p->key[temp]);
 						t->pointer.push_back(p->pointer[temp]);
+						p->pointer[temp]->father = t;
 						p->key.erase(p->key.begin() + temp);
 						p->pointer.erase(p->pointer.begin()+temp);
 					}
 					t->pointer.push_back(p->pointer[temp]);
+					p->pointer[temp]->father = t;
 					p->pointer.erase(p->pointer.begin() + temp);
 					temp = 0;
 					while(p->father->pointer[temp++] != p);
@@ -327,21 +551,24 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 
 	}
 	else
-		return ERROR_UNKNOWN;
+	{
+		cout << "Error: No such type!" << endl;
+		return ERROR_TYPE;
+	}
 
 	return SUCCESS;
 }
  
 int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 {
-	int degree = GetDegree(block_size, type);
+	int degree =  GetDegree(block_size, type);
 	stringstream ss(*skey);
 	string output;
 
 	if (type == TYPE_INT)
 	{
 		int key;
-		INTNODE *p, *pre=NULL, *next=NULL, *root;
+		INTNODE *p, *pre_node=NULL, *next_node=NULL, *root;
 
 		ss >> key;
 		root = p = int_map[*file_name];
@@ -354,9 +581,9 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 			i++;
 			if (p->key[0] > key) i = 0;
 			if (i > 0)
-				pre = p->pointer[i - 1];
+				pre_node = p->pointer[i - 1];
 			else if (i + 1 < p->key.size())
-				next = p->pointer[i + 1];
+				next_node = p->pointer[i + 1];
 			p = p->pointer[i];
 		}
 		//Find the key
@@ -366,7 +593,7 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 		if (i == p->key.size())
 		{
 			cout << "Error: No such turple!" << endl;
-			return ERROR_offset_NOT_EXISTS;
+			return ERROR_OFFSET_NOT_EXISTS;
 		}
 		output = to_string(p->block[i]) + " " + to_string(p->offset[i]);
 		//Delete it from B+ tree and file
@@ -379,23 +606,26 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 		system(cmd.c_str());
 		ifstream old("temp.idx");
 		ofstream nfile(*file_name);
-		int offset, tkey, block;
+		int toffset, tkey, tblock;
 		while (1)
 		{
+			old >> tkey;
 			if (old.eof())
 				break;
-			old >> tkey >> block >> offset;
+			old>> tblock >> toffset;
 			if (key == tkey) continue;
-			nfile << tkey << " " << block << offset << endl;
+			nfile << tkey << " " << tblock << " " << toffset << endl;
 		}
 		old.close();
 		nfile.close();
-		if (p->key.size() >= degree / 2) 
-			return SUCCESS;
+		cmd = "del temp.idx";
+		system(cmd.c_str());
+		if (p->key.size() >= degree / 2 || p == root)
+			goto end;
 		//Adjust B+ tree
-		if (!pre && (next && next->key.size() + p->key.size() < degree))
-			pre = p;
-		p = next;
+		if (!pre_node && (next_node && next_node->key.size() + p->key.size() < degree))
+			pre_node = p;
+		p = next_node;
 		while (p->key.size() < degree / 2)
 		{
 			//If p's father is root
@@ -409,7 +639,7 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 				free(root);
 			}
 			//Merge two nodes to the left node
-			if (pre && pre->key.size() + p->key.size() < degree)
+			if (pre_node && pre_node->key.size() + p->key.size() < degree)
 			{
 				//Merge leaf nodes
 				if (p->offset.size() == 0)
@@ -417,19 +647,19 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 					 //Copy keys and offsets to the left node
 					for (int i = 0; i < p->key.size(); i++)
 					{
-						pre->key.push_back(p->key[i]);
-						pre->block.push_back(p->block[i]);
-						pre->offset.push_back(p->offset[i]);
+						pre_node->key.push_back(p->key[i]);
+						pre_node->block.push_back(p->block[i]);
+						pre_node->offset.push_back(p->offset[i]);
 					}
-					pre->pointer.clear();
-					if (p->pointer.size() != 0)
-						pre->pointer.push_back(p->pointer[0]);
+					pre_node->next = p->next;
+					if (p->next)
+						p->next->prev = pre_node;
 					p->key.clear();
 					p->block.clear();
 					p->offset.clear();
-					pre = p;
+					pre_node = p;
 					//p is the first pointer of its father
-					if (p->father != pre->father)
+					if (p->father != pre_node->father)
 					{
 						p = p->father;
 						p->key.erase(p->key.begin());
@@ -445,21 +675,21 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 						i--;
 						p->key.erase(p->key.begin() + i);
 					}
-					free(pre);
+					free(pre_node);
 				}
 				else//Merge non-leaf nodes
 				{
 					//Copy keys and pointers to the left node
 					for (int i = 0; i < p->key.size(); i++)
 					{
-						pre->key.push_back(p->key[i]);
-						pre->pointer.push_back(p->pointer[i]);
+						pre_node->key.push_back(p->key[i]);
+						pre_node->pointer.push_back(p->pointer[i]);
 					}
-					pre->pointer.push_back(p->pointer[i]);
+					pre_node->pointer.push_back(p->pointer[i]);
 					p->key.clear();
 					p->pointer.clear();
-					pre = p;
-					if (p->father != pre->father)
+					pre_node = p;
+					if (p->father != pre_node->father)
 					{//p is the first pointer of its father
 						p = p->father;
 						p->key.erase(p->key.begin());
@@ -475,47 +705,47 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 						i--;
 						p->key.erase(p->key.begin() + i);
 					}
-					free(pre);
+					free(pre_node);
 				}
 			}
 			else//Redistribute pointers
 			{
 				if (p->offset.size() != 0)
 				{//Leaf nodes
-					if (pre)//Take one key from pre_node to p
+					if (pre_node)//Take one key from pre_node_node to p
 					{
-						p->key.insert(p->key.begin(), pre->key[pre->key.size() - 1]);
-						p->block.insert(p->block.begin(), pre->block[pre->block.size() - 1]);
-						p->offset.insert(p->offset.begin(), pre->offset[pre->offset.size() - 1]);
-						pre->key.pop_back();
-						pre->block.pop_back();
-						pre->offset.pop_back();
+						p->key.insert(p->key.begin(), pre_node->key[pre_node->key.size() - 1]);
+						p->block.insert(p->block.begin(), pre_node->block[pre_node->block.size() - 1]);
+						p->offset.insert(p->offset.begin(), pre_node->offset[pre_node->offset.size() - 1]);
+						pre_node->key.pop_back();
+						pre_node->block.pop_back();
+						pre_node->offset.pop_back();
 					}
-					else//Take one key from next_node to p
+					else//Take one key from next_node_node to p
 					{
-						p->key.push_back(next->key[0]);
-						p->block.push_back(next->block[0]);
-						p->offset.push_back(next->offset[0]);
-						next->key.erase(next->key.begin());
-						next->block.erase(next->block.begin());
-						next->offset.erase(next->offset.begin());
+						p->key.push_back(next_node->key[0]);
+						p->block.push_back(next_node->block[0]);
+						p->offset.push_back(next_node->offset[0]);
+						next_node->key.erase(next_node->key.begin());
+						next_node->block.erase(next_node->block.begin());
+						next_node->offset.erase(next_node->offset.begin());
 					}
 				}
 				else//Non-leaf nodes
 				{
-					if (pre)//Take one key from pre_node to p
+					if (pre_node)//Take one key from pre_node_node to p
 					{
-						p->key.insert(p->key.begin(), pre->key[pre->key.size() - 1]);
-						p->pointer.insert(p->pointer.begin(), pre->pointer[pre->pointer.size() - 1]);
-						pre->key.pop_back();
-						pre->pointer.pop_back();
+						p->key.insert(p->key.begin(), pre_node->key[pre_node->key.size() - 1]);
+						p->pointer.insert(p->pointer.begin(), pre_node->pointer[pre_node->pointer.size() - 1]);
+						pre_node->key.pop_back();
+						pre_node->pointer.pop_back();
 					}
-					else//Take one key from next_node to p
+					else//Take one key from next_node_node to p
 					{
-						p->key.push_back(next->key[0]);
-						p->pointer.push_back(next->pointer[0]);
-						next->key.erase(next->key.begin());
-						next->pointer.erase(next->pointer.begin());
+						p->key.push_back(next_node->key[0]);
+						p->pointer.push_back(next_node->pointer[0]);
+						next_node->key.erase(next_node->key.begin());
+						next_node->pointer.erase(next_node->pointer.begin());
 					}
 				}
 
@@ -536,7 +766,8 @@ int BPLUSTREE::DeleteNode(int type, string * file_name, string *skey)
 		cout << "Error: Unknown!" << endl;
 		return ERROR_UNKNOWN;
 	}	
-	ofstream tempf("temp.tmp",ios::app);
+end:
+	ofstream tempf("delete.tmp");
 
 	tempf << output << endl;
 	tempf.close();
@@ -560,6 +791,6 @@ int GetDegree(int block_size, int type)
 	}
 	degree = (block_size + type_size) / (POINTERSIZE + type_size);
 	//Degree >= 16
-	return degree;
+	return 3;//degree;//#################################################################DEBUG
 }
 

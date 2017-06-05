@@ -17,7 +17,7 @@ CreateIndex:
 #define ERROR_TYPE -1
 #define ERROR_FILE -2
 #define ERROR_INDEX_EXISTS -3
-#define ERROR_offset_NOT_EXISTS -4
+#define ERROR_OFFSET_NOT_EXISTS -4
 #define ERROR_UNKNOWN -233
 /*The code above should be added in api */
 
@@ -30,21 +30,21 @@ struct INTNODE
 	vector<int> key;
 	vector<INTNODE*> pointer;
 	vector<int> offset, block;
-	INTNODE *father;
+	INTNODE *father, *prev, *next;
 };
 struct FLOATNODE
 {
 	vector<float> key;
 	vector<FLOATNODE*> pointer;
 	vector<int> offset;
-	FLOATNODE *father;
+	FLOATNODE *father, *prev, *next;
 };
 struct CHARNODE
 {
-	vector<char*> key;
+	vector<string> key;
 	vector<CHARNODE*> pointer;
 	vector<int> offset;
-	CHARNODE *father;
+	CHARNODE *father, *prev, *next;
 };
 
 
@@ -54,17 +54,20 @@ public:
 	BPLUSTREE(int block_size);
 	~BPLUSTREE();
 	int CreateTree(int type, string *file_name);
-	int CreateIndex(string *attribute, string *file_name, int type);
+	int CreateIndex(string *file_name, int type);
 	int DropIndex(string *file_name);
-	int AddNode(int type, string *file_name, string *key, int block, int offset);
+	int Insert(int type, string *file_name, string *key, int block, int offset);
+	int Delete(int type, string *file_name, string *lbound, string *rbound, int lopen, int ropen);
+	int Find(int type, string *file_name, string *lbound, string *rbound, int lopen, int ropen);
 	int DeleteNode(int type, string *file_name, string *skey);
 
 
 private:
 	int block_size;
-	map<string, string> index_to_file;
 	map<string, INTNODE*> int_map;
 	map<string, FLOATNODE*> float_map;
 	map<string, CHARNODE*> char_map;
+	int AddNode(int type, string *file_name, string *key, int block, int offset);
+	//int DeleteNode(int type, string *file_name, string *skey);
 };
 
