@@ -149,7 +149,7 @@ int Space(char* ch, int size)
     while (*ch)
     {
         int i = 0;
-        while (*ch&&(*ch==' ')) {
+        while (*ch&&(*ch==' '||*ch == 10)) {
             ch++;
             i++;
         }
@@ -159,7 +159,7 @@ int Space(char* ch, int size)
         if (!*ch) break;
         pos = pos+i;
 
-        while (*ch&&*ch!=' '){
+        while (*ch&&*ch!=' '&&*ch != 10){
             ch++;
             pos++;
         }
