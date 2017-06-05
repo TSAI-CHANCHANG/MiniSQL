@@ -29,21 +29,21 @@ struct INTNODE
 {
 	vector<int> key;
 	vector<INTNODE*> pointer;
-	vector<int> offset, block;
+	vector<int> block, offset;
 	INTNODE *father, *prev, *next;
 };
 struct FLOATNODE
 {
 	vector<float> key;
 	vector<FLOATNODE*> pointer;
-	vector<int> offset;
+	vector<int> block, offset;
 	FLOATNODE *father, *prev, *next;
 };
 struct CHARNODE
 {
 	vector<string> key;
 	vector<CHARNODE*> pointer;
-	vector<int> offset;
+	vector<int> block, offset;
 	CHARNODE *father, *prev, *next;
 };
 
@@ -55,7 +55,7 @@ public:
 	~BPLUSTREE();
 	int CreateTree(int type, string *file_name);
 	int CreateIndex(string *file_name, int type);
-	int DropIndex(string *file_name);
+	int DropIndex(string *file_name, int type);
 	int Insert(int type, string *file_name, string *key, int block, int offset);
 	int Delete(int type, string *file_name, string *lbound, string *rbound, int lopen, int ropen);
 	int Find(int type, string *file_name, string *lbound, string *rbound, int lopen, int ropen);
