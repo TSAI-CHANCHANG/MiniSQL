@@ -1,4 +1,4 @@
-# Public Functions in Buffer Manager
+# Buffer Manager的对外接口
 
 # FindBlockinBuffer
 
@@ -8,24 +8,24 @@ int FindBlockinBuffer(string fileName, int offset)
 
 ## string fileName
 
-*   The name of the file you want to get the block
+*   要获取块的文件的名称
 
 ## int offset
 
-*   It is the No.offset block in this file.
+*   它是这个文件中的第offset块
 
-*   The No. is beginning with 0
+*   从0开始
 
 ## Returned value
 
-*   An int which is the number of the blocks in the buffer
-*   e.g. If you need a block, then I get it and return an BLOCKNUM,you can read it in blocks[BLOCKNUM].content, which is a char* type variable
+*   一个int是缓冲区中的块数
+*   例如 如果你需要一个块，那么我得到它并返回一个BLOCKNUM，你可以读取块[BLOCKNUM] .content，这是一个char *类型的变量
 
 ## Description
 
-*   If the block is in buffer, we just return the blocknum
-*   If the block is not in buffer, we first read it from the file
-*   However, for the higher level, there is nothing to worry about it because when they get reach to data, they are all int buffer now
+*   如果块在缓冲区中，我们只返回blocknum
+*   如果块不在缓冲区中，我们首先从文件中读取它
+*   然而，对于上层，没有什么可担心的，因为当他们达到数据时，它们现在都是缓冲区了
 
 # FindSuitBlockinBuffer
 
@@ -35,32 +35,32 @@ void FindSuitBlockinBuffer(string fileName, int size, int* blocknum, int * block
 
 ## string fileName
 
-*   The name of the file you want to get the block
+*   要获取块的文件的名称
 
 ## int size
 
-*   The size of the data you want to insert in
-*   e.g. you want to return "3 XIAODONG 66666", the size is 16
+*   要插入的数据的大小
+*   例如 你想返回“3 XIAODONG 66666”，大小是16
 
 ## int* blocknum
 
-*   The return value
-*   It is the number of the block in buffer, like the one above
+*   返回值
+*   它是缓冲区中的块的编号，如上所述
 
 ## int* blockoffset
 
-*   The return value
-*   It is the position the content can begin with
-*   WATCH FOR THE BLANKS!
-*   e.g. if there are 8 spaces which begin at blocks[blocknum].content[3], then I will return 4 because you have to leave a space for interva
-*   The number of the blanks is at leas 2 more than size
-*   e.g. However, if it is an empty block, 0 will be returned
+*   返回值
+*   content中可以开始的位置
+*   注意空格！！！！！
+*   例如 如果从块[blocknum] .content [3]开始有8个空格（或换行符），那么我将返回4，因为你必须留下一个空格
+*   空白的数量至少比size大2（保证前后有分隔符）
+*   但是，如果是空块，则返回0
 
 ## Description
 
-*   It is a function useful in insert operation
-*   Tell me in which file you want to insert data of how much, and I will return the space and the position
-*   I first fint whether it is in buffer, if not, search in the entire file. If the file is 'full', a new block will be append at the tail of the file.
+*   它是插入操作中有用的功能
+*   告诉我你要插入哪个文件的数据多少，我将返回空格和位置
+*   我首先找到它是否在缓冲区，如果没有，搜索整个文件。 如果文件为“饱和”，则会在文件尾部附加一个新的块。
 
 # DirtBlock
 
@@ -70,12 +70,12 @@ void DirtBlock(int blocknum);
 
 ## int blocknum
 
-*   The number of the block to set dirt
+*   给这个块设为dirt
 
 ## Description
 
-*   DO NOT FORGET IT AFTER REVISING THE CONTENT IN THE BLOCKS!
-*   However, if you use the Insert and Delete function provided by buffermanager, this is needless because I have done such thing
+*   在修改块中的内容后不要忘记调用这个函数！！！！
+*   但是，如果您使用buffermanager提供的插入和删除功能，这是不必要的，因为我已经做了这样的事情
 
 # DeleteFile
 
@@ -85,11 +85,11 @@ int DeleteFile(string filename);
 
 ## string filename
 
-*   The name of the file to delete
+*   要删除的文件的名称
 
 ## Description
 
-*   If you cannot delete it, it will output error
+*   如果你不能删除它，它会输出错误
 
 # FindFile
 
@@ -99,11 +99,11 @@ bool FindFile(string filename);
 
 ## string filename
 
-*   The name of the file to find
+*   要查找的文件的名称
 
 ## Returned Value
 
-*   true for finding it, false for not finding it
+*   找到它是true，没有找到它是false
 
 # Insert
 
@@ -113,19 +113,19 @@ int Insert(int blocknum, int offset, char* data);
 
 ## int blocknum
 
-*   The block you want to insert data in
+*   要插入数据的块
 
 ## int offset
 
-*   The position from which the insert begin(including it)
+*   插入开始的位置（包括它）
 
 ## char* data
 
-*   The detailed data you want to insert in
+*   要插入的详细数据
 
 ## Description
 
-*   There is no detect of corrction in this function!
+*   在这个功能中没有检测错误功能！
 
 # Delete
 
@@ -135,19 +135,19 @@ int Delete(int blocknum, int blockoffset, int size);
 
 ## int blocknum
 
-*   The block you want to delete data from
+*   要从中删除数据的块
 
 ## int blockoffset
 
-*   From where(including) to delete
+*   从哪里（包括这个位置）开始删除
 
 ## int size
 
-*   Delete how long the data
+*   删除数据多长
 
 ## Description
 
-*   Using blanks to stuff the origin data
+*   使用空格填充原始数据
 
 # Class Block
 
@@ -160,20 +160,20 @@ char content[BLOCKSIZE+1];
 
 ## string filename
 
-*   the data in the block is belong to which file
+*   块中的数据属于哪个文件
 
 ## int fileoffset
 
-*   it is the No.fileoffset block in the file
+*   它是文件中的第fileoffset块
 
 ## int usedsize
 
-*   howmuch bytes are used in this block
+*   在该块中使用了多少字节
 
 ## char content[BLOCKSIZE+1]
 
-*   define BLOCKSIZE = 4096
-*   the last char is always 0
+*   定义BLOCKSIZE = 4096
+*   最后一个字符始终为0
 
 ## Other
 

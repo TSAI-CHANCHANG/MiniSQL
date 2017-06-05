@@ -1,4 +1,4 @@
-# The Format of .tab Files
+# .tab文件的格式
 
 ```
 tablename blocknum attrnum primary Attrname1 Attrtype1 attrlength1 primary1(bool) indexname1(string) unique1(bool)  Attrname2 Attrtype2……    
@@ -6,57 +6,57 @@ tablename blocknum attrnum primary Attrname1 Attrtype1 attrlength1 primary1(bool
 
 ## tablename
 
-*   the name of the table
+*   表名
 
 ## blocknum
 
-*   how much block the RECORD need in ".rec"file
+*   RECORD在“.rec”文件中需要多少块
 
 ## attrnum
 
-*   how much attributes in the table
+*   表中有多少属性
 
 ## primary
 
-*   the position of the primary key, begin with 0 and -1 for no primary
+*   主键的位置，从0开始，-1为无主键
 
 ## Attrname1
 
-*   the name of the first attribute
+*   第一个属性的名称
 
 ## attrlength1
 
-*   the length of the first attribute, int and float being 0, char(6) being 6
+*   第一个属性的长度，int和float为0，char（6）为6
 
 ## primary1
 
-*   whether it is primary
+*   是否是主键
 
 ## indexname1
 
-*   the indexname on the attribute, "noindex" for no index
+*   属性上的indexname，没有索引的就是“noindex”
 
 ## unique1
 
-*   whether it is unique
+*   是否是独一无二的
 
 # Class Table
 
 ## int blocknum
 
-*   how many block in the RECORD need in ".rec" file
+*   RECORD中有多少块需要在“.rec”文件中
 
 ## short primary
 
-*   the position of the primary key, begin with 0 and -1 for no primary
+*   主键的位置从0开始，-1为无主键
 
 ## int Attrnum
 
-*   how much attributes in the table
+*   表中有多少属性
 
 ## vector <attribute>Attr</attribute>
 
-*   a vector of the attributes
+*   属性的向量
 
 ## string getName() const
 
@@ -74,23 +74,23 @@ tablename blocknum attrnum primary Attrname1 Attrtype1 attrlength1 primary1(bool
 
 ## short length
 
-*   it is meaningful only when type is TYPE_CHAR, its how long the char type is
+*   只有当type是TYPE_CHAR时，它才有意义，它的char类型是多长
 
 ## string attrname
 
-*   the attribute's name
+*   属性的名称
 
 ## bool primary
 
-*   whether it is primary
+*   是否是主键
 
 ## bool unique
 
-*   whether it is unique
+*   是否唯一
 
 ## string indexname
 
-*   the name of the index on the attribute, no index is "noindex"
+*   该属性的索引名称，无索引为“noindex”
 
 # GetTable
 
@@ -100,15 +100,15 @@ Table GetTable(string Tablename);
 
 ## string Tablename
 
-*   the name of the table, the filename is tablename+".tab"
+*   表的名称，文件名是tablename +'.tab'
 
 ## Return Value
 
-*   An object of Table class
+*   表类的一个对象
 
 ## Description
 
-*   Read the details about the table
+*   读入有关表格的详细信息
 
 # CreateTable
 
@@ -118,15 +118,15 @@ int CreateTable(string Tablename, string Attributes,BPLUSTREE& BT);
 
 ## string Tablename
 
-*   the name of the table, offered by API
+*   由API提供的表的名称
 
 ## string Attributes
 
-*   the string between brackets
+*   括号之间的字符串
 
 ## BPLUSTREE& BT
 
-*   the B+ tree of index manager, offered by API(There should be a BPLUSTREE class object in the API class)
+*   索引管理器的B +树，由API提供（API类中应该有一个BPLUSTREE类对象）
 
 ## Returned Value
 
@@ -140,14 +140,14 @@ int CreateTable(string Tablename, string Attributes,BPLUSTREE& BT);
 
 ## Description
 
-*   Receive the details and create the table
-*   divide the Attributes(string) into pieces by ','
-*   the one like "Name char(10) unique" is send to defAtt(string attDef) for further analyse
-*   the one like "primary key(ID)" is analysed here
-*   can deat with more than one blanks
-*   can detect almost all wrong formats,if there is sth wrong, return value is not SUCCESS
-*   after analysing, we set up a file and save all the details in it, using SetTable(Table tab)
-*   if it has a primary, the primary key's indexname is its attributename, and set an empty file of 'indexname.idx' and 'tablename.rec', build an empty B plus tree
+*   收到细节并创建表
+*   将属性（字符串）以','划分
+*   像“Name char（10）unique”一样被发送到defAtt（string attDef）进一步分析
+*   这里分析一个像“primary key（ID）”一样的字符串
+*   可以多于一个空白
+*   可以检测几乎所有错误的格式，如果有错误，返回值不是SUCCESS
+*   分析后，我们设置一个文件并保存所有的细节，使用SetTable（Table tab）
+*   如果它有一个主键，主键的索引名称是其属性名称，并设置一个空的文件'indexname.idx'和'tablename.rec'，构建一个空的B加树
 
 # DropTable
 
@@ -157,11 +157,11 @@ int DropTable(string Tablename, BPLUSTREE& BT)
 
 ## string Tablename
 
-*   name of the table
+*   表名
 
 ## BPLUSTREE& BT
 
-*   As above
+*   同上
 
 ## return value
 
@@ -172,8 +172,8 @@ int DropTable(string Tablename, BPLUSTREE& BT)
 
 ## Description
 
-*   first find whether the table has any index on it, if it has, then delete them using BPLUSTREE
-*   then delete the '.rec' and '.tab' files
+*   首先找到表上是否有任何索引，如果它有，然后使用BPLUSTREE删除它们
+*   然后删除'.rec'和'.tab'文件
 
 # CreateIndex
 
@@ -183,19 +183,19 @@ int CreateIndex(string Indexname, string Tablename, string Attrname, BPLUSTREE& 
 
 ## string Indexname
 
-*   the name of the index
+*   索引名
 
 ## string Tablename
 
-*   the name of the table
+*   表名
 
 ## string Attrname
 
-*   the name of the Attrname
+*   表上的属性名
 
 ## BPLUSTREE& BT
 
-*   As above
+*   同上
 
 ## Returned Value
 
@@ -208,17 +208,17 @@ int CreateIndex(string Indexname, string Tablename, string Attrname, BPLUSTREE& 
 
 ## Description
 
-*   First, find the table and the attribute
-*   Second, set the tab.Attr[i].indexname = indexname;
-*   Then prepare for the Creation of BPLUSS Tree
+*   首先，找到表和属性
+*   其次，设置tab.Attr [i] .indexname = indexname;
+*   然后准备创建BPLUSS树，包括如下工程
 
-    > read the records from '.rec'
+    > 从'.rec'读取记录（用buffer manager）
     > 
-    > get the record we need(the key in BPLUS tree)(using buffermanager)
+    > 获取我们需要的记录（BPLUS树中的关键字）
     > 
-    > write key block offset into the '.idx' file
+    > 将key block offset写入'.idx'文件
     > 
-    > using the '.idx' file to call BPLUSTREE CreaIndex
+*   使用'.idx'文件调用BPLUSTREE CreateIndex
 
 # DropIndex
 
@@ -228,15 +228,15 @@ int DropIndex(string Indexname, string Tablename, BPLUSTREE& BT)
 
 ## string Indexname
 
-*   the index's name
+*   索引名
 
 ## string Tablename
 
-*   the table the index is on
+*   索引所在的表
 
 ## BPLUSTREE& BT
 
-*   As above
+*   同上
 
 ## Returned Value
 
@@ -248,7 +248,7 @@ int DropIndex(string Indexname, string Tablename, BPLUSTREE& BT)
 
 ## Description
 
-*   Drop an index of a table
-*   can find some errors, e.g. no such index
-*   call the DropIndex in B Plus Tree(delete the ".idx" will be done by BPLUSTREE)
-*   turn the tab.attr[i].indexname into "noindex"
+*   删除一个表的索引
+*   可以发现一些错误，例如 没有这样的索引
+*   在B Plus Tree中调用DropIndex（删除“.idx”将由BPLUSTREE完成）
+*   将tab.attr [i] .indexname转换为“noindex”
