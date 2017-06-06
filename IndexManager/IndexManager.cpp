@@ -355,6 +355,9 @@ int BPLUSTREE::Delete(int type, string * file_name, string * lbound, string * rb
 int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbound, int lopen, int ropen)
 {
 	stringstream ls(*lbound),rs(*rbound);
+	//Clear select.tmp
+	ofstream tmp("select.tmp");
+	tmp.close();
 
 	if (type == TYPE_INT)
 	{
@@ -1891,6 +1894,6 @@ int GetDegree(int block_size, int type)
 	}
 	degree = (block_size + type_size) / (POINTERSIZE + type_size);
 	//Degree >= 16
-	return 5;//degree;//#################################################################DEBUG
+	return degree;//#################################################################DEBUG
 }
 
