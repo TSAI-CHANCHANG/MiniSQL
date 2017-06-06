@@ -191,7 +191,7 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 
 	//step1
 	end = SQLSentence.find("table", SQLCurrentPointer);
-	if (end != -1)//create table
+	if (end != -1)//drop table
 	{
 		SQLCondition.setInstruction(DROP_TABLE);
 		SQLCurrentPointer = end;//move pointer to 't'("drop table oooo")
@@ -211,13 +211,16 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 			--end;
 		while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)// get rid of ' '
 			--end;
-		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);//get table name
+		if (SQLSentence[end] == ';')
+			currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);//get table name
+		else
+			currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);//get table name
 		
 		//set tableName
 		SQLCondition.setTableName(currentWord);
 		SQLCurrentPointer = end;
 	}
-	else//create index
+	else//drop index
 	{
 		end = SQLSentence.find("index", SQLCurrentPointer);
 		if (end == -1)
@@ -380,7 +383,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 
 /////////////////////////////////////////////////
 /////Function No. 4:
-/////analusis the insert clause then change the object of condition class
+/////analusis the create clause then change the object of condition class
 int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition)
 {
 	string currentWord;
@@ -470,6 +473,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			return ERROR;
 		}
 
+		SQLCondition.setInstruction(CREATE_INDEX);
 		//step3.b
 		end = SQLSentence.find("on", 0);
 		if (end == -1)
@@ -525,7 +529,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 
 		//step8.b
 		SQLCurrentPointer = end;
-		while (SQLSentence[SQLCurrentPointer] == 'o')
+		while (SQLSentence[SQLCurrentPointer] == 'o' || SQLSentence[SQLCurrentPointer] == 'n')
 			++SQLCurrentPointer;//across 'on'
 
 		//step9.b
@@ -589,12 +593,119 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		//step7.a
 		++SQLCurrentPointer;
 		--end;
-		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
 		SQLCondition.setAttribute(currentWord);
 		return CREATE_INDEX;
 	}
 }
 
+/////////////////////////////////////////////////
+/////Function No. 5:
+/////analusis the delect clause then change the object of condition class
+int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition)
+{
+	string currentWord;
+	SQLCondition.setInstruction(DELETE);
+	//step1
+	if (SQLSentence.find("delete from", 0) == -1)//error
+	{
+		if (SQLSentence.find("from", 0) == -1)//can not find from
+		{
+			cout << "Error! Can not find key word 'from'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		else
+		{
+			cout << "Error! There are some syntax error between \"delete\" and \"from\"." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+	}
+	
+	//step2
+	SQLCurrentPointer = SQLSentence.find("from", 0);
+
+	//step3
+	while (SQLSentence[SQLCurrentPointer] != ' ' && SQLSentence[SQLCurrentPointer] != ';')
+		++SQLCurrentPointer;//now pointer is point to "from "'s end space
+
+	//step4
+	end = SQLSentence.find("where", 0);
+
+	if (end == -1)
+	{
+		end = SQLSentence.find(';', 0) - 1;
+		while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)
+			--end;
+		while (SQLSentence[SQLCurrentPointer] == ' ' && end > SQLCurrentPointer)
+			++SQLCurrentPointer;
+		if (SQLCurrentPointer == end)
+		{
+			cout << "Error! Can not find table name." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
+		int i = 0;
+		while (currentWord[i] != ' ' && i < currentWord.size())
+			++i;
+		if (i != currentWord.size())
+		{
+			cout << "Error! find a sytnax fault between \"from\" and ';'." << endl;
+			end = SQLSentence.find(';', SQLCurrentPointer);
+			SQLCurrentPointer = end;
+			return ERROR;
+		}
+		SQLCondition.setTableName(currentWord);
+		SQLCondition.setWhereClause("*");
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		SQLCurrentPointer = end;//end
+		return DELETE;
+	}
+	
+	--end;
+	while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)
+		--end;
+	while (SQLSentence[SQLCurrentPointer] == ' ' && end > SQLCurrentPointer)
+		++SQLCurrentPointer;
+	if (SQLCurrentPointer == end)
+	{
+		cout << "Error! Can not find table name." << endl;
+		end = SQLSentence.find(';', 0);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
+	int i = 0;
+	while (currentWord[i] != ' ' && i < currentWord.size())
+		++i;
+	if (i != currentWord.size())
+	{
+		cout << "Error! find a sytnax fault between \"from\" and 'where'." << endl;
+		end = SQLSentence.find(';', 0);
+		SQLCurrentPointer = end;
+		return ERROR;
+	}
+	SQLCondition.setTableName(currentWord);
+
+	//find where clause
+	SQLCurrentPointer = SQLSentence.find("where", 0);
+	while (SQLSentence[SQLCurrentPointer] != ' ' && SQLSentence[SQLCurrentPointer] != ';')
+		++SQLCurrentPointer;
+	end = SQLSentence.find(';', 0);
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+	SQLCondition.setWhereClause(currentWord);
+
+
+	//end
+	end = SQLSentence.find(';', SQLCurrentPointer);
+	SQLCurrentPointer = end;
+	return SELECT;
+}
 int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 {
 	string firstWord;
@@ -655,9 +766,9 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 		else
 			cout << "Error! Quit instruction should has only one key word \"quit\"\n";
 	}
-	else if (firstWord == "delect")
+	else if (firstWord == "delete")
 	{
-
+		code = delect_clauese(SQLSentence, SQLCurrentPointer, end, SQLCondition);
 	}
 	else if (firstWord == "create")
 	{
@@ -690,6 +801,8 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	else//input is wrong
 	{
 		cout << "Error! Doesn't found a instruction key word!" << endl;
+		end = SQLSentence.find(';', 0);
+		SQLSentence.erase(0, end + 1);
 		return ERROR;
 	}
 	if (SQLSentence[SQLCurrentPointer + 1] == ';')
