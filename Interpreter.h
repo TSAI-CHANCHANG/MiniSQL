@@ -16,6 +16,9 @@ using namespace std;
 #define EXEC         6
 #define DROP_TABLE   7
 #define DROP_INDEX   8
+#define CREATE_TABLE 9
+#define CREATE_INDEX 10
+#define DELETE       11
 string getInput();
 
 class condition
@@ -24,8 +27,9 @@ class condition
 	vector <string> colName;
 	string tableName;
 	string indexName;
-	vector <string> whereClause;
+	string whereClause;
 	string insertValues;
+	string attribute;
 public:
 	condition() : instructionType(NULL) {}
 	~condition() {}
@@ -33,7 +37,17 @@ public:
 	inline void setColName(const string &col) { colName.push_back(col); }
 	inline void setTableName(const string &table) { tableName = table; }
 	inline void setIndexName(const string &index) { indexName = index; }
-	inline void setWhereClause(const string &whereC) { whereClause.push_back(whereC); }
-	inline void clearClass() { instructionType = 0; colName.clear(); tableName = ""; indexName = ""; whereClause.clear(); }
+	inline void setWhereClause(const string &whereC) { whereClause = whereC; }
 	inline void setInsertValues(const string &insertV) { insertValues = insertV; }
+	inline void setAttribute(const string &attributeS) { attribute = attributeS; }
+	inline void clearClass()
+	{
+		instructionType = 0;
+		colName.clear();
+		tableName = "";
+		indexName = "";
+		whereClause = "";
+		attribute = "";
+		insertValues = "";
+	}
 };
