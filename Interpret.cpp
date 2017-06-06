@@ -177,7 +177,12 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 		return SELECT;
 	else
 	{
-		///////to be continued
+		SQLCurrentPointer = SQLSentence.find("where", 0);
+		while (SQLSentence[SQLCurrentPointer] != ' ' && SQLSentence[SQLCurrentPointer] != ';')
+			++SQLCurrentPointer;
+		end = SQLSentence.find(';', 0);
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+		SQLCondition.setWhereClause(currentWord);
 		return SELECT;
 	}
 }
