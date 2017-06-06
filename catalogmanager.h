@@ -1,7 +1,7 @@
 #ifndef CATALOGMANAGER_H
 #define CATALOGMANAGER_H
 #include "buffermanager.h"
-#include "IndexManager.h"
+#include "IndexManager/IndexManager.h"
 #include "table.h"
 #include "defination.h"
 
