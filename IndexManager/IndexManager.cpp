@@ -456,8 +456,8 @@ int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbou
 		i = li;
 		ofstream tmp("select.tmp");
 		while (1)
-		{
-			if (p == right && i > ri)
+		{		
+			if ((p == right && i > ri) || (right->next == left))
 				break;
 			tmp << p->block[i] << " " << p->offset[i] << endl;		
 			if (p == right && i == ri)
@@ -573,7 +573,7 @@ int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbou
 		ofstream tmp("select.tmp");
 		while (1)
 		{
-			if (p == right && i > ri)
+			if ((p == right && i > ri) || (right->next == left))
 				break;
 			tmp << p->block[i] << " " << p->offset[i] << endl;
 			if (p == right && i == ri)
@@ -689,7 +689,7 @@ int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbou
 		ofstream tmp("select.tmp");
 		while (1)
 		{
-			if (p == right && i > ri)
+			if ((p == right && i > ri) || (right->next == left))
 				break;
 			tmp << p->block[i] << " " << p->offset[i] << endl;
 			if (p == right && i == ri)
