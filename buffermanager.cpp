@@ -149,7 +149,7 @@ int Space(char* ch, int size)
     while (*ch)
     {
         int i = 0;
-        while (*ch&&(*ch==' ')) {
+        while (*ch&&(*ch==' '||*ch == 10)) {
             ch++;
             i++;
         }
@@ -159,7 +159,7 @@ int Space(char* ch, int size)
         if (!*ch) break;
         pos = pos+i;
 
-        while (*ch&&*ch!=' '){
+        while (*ch&&*ch!=' '&&*ch != 10){
             ch++;
             pos++;
         }
@@ -172,14 +172,13 @@ void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blockn
     //如果buffer里有可以用的块，直接用
     for (int i = 0; i< BLOCKNUMBER; i++){
         if (blocks[i].used&& blocks[i].filename==fileName)
-            if ((*blockoffset=Space(blocks[i].content,size))!=-1)
+            if ((*blockoffset=Space(blocks[i].content,size)+1)!=0)
         {
             UpdateBlock(i);
             blocks[*blocknum].usedsize+=size;
             *blocknum = i;
             return ;
         }
-        WriteBack(i);
     }
 
     int i = 0;
@@ -194,7 +193,7 @@ void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blockn
             *blockoffset = 0;
             return;
         }
-        if ((*blockoffset = Space(blocks[*blocknum].content,size))!=-1) return;
+        if ((*blockoffset = Space(blocks[*blocknum].content,size)+1)!=0) return;
         i++;
     }
 
