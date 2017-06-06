@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "../table.h"
+
 using namespace std;
 
 enum DataType {
@@ -18,10 +19,14 @@ enum DataType {
 
 class RecordManager {
 private:
+    string tableName;
+
     string generateInsertValues(string rawValues, Table tableInfo);
+
 public:
-    RecordManager() {}
-    bool insertRecord(string tableName, string rawValues);
+    RecordManager(const string tableName) : tableName(tableName) {}
+
+    bool insertRecord(string rawValues);
 //    bool deleteRecords(string tableName, string rawWhereClause);
 //    bool selectRecords(string tableName, vector<string> attributes, string rawWhereClause);
 };

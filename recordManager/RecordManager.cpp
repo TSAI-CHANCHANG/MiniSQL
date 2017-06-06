@@ -14,7 +14,7 @@
 
 using namespace std;
 
-bool RecordManager::insertRecord(string tableName, string rawValues) {
+bool RecordManager::insertRecord(string rawValues) {
     catalogmanager catalogMgr;
     Table tableInfo = catalogMgr.GetTable(tableName);
 
@@ -33,10 +33,19 @@ bool RecordManager::insertRecord(string tableName, string rawValues) {
 
     buffermanager bufferMgr;
 
+    int blockNum;
+    int blockOffset;
+
+    // TODO: resultRecord的最终形式的确定，换行？空格？
+    bufferMgr.FindSuitBlockinBuffer(tableName, resultRecord.length(), &blockNum, &blockOffset);
+    bufferMgr.Insert(blockNum, blockOffset, (char *)resultRecord.c_str()); // TODO: 返回值？成功失败的标志？
+
+
     return true;
 }
 
 string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
+    // TODO: check unique and primary
     string resultRecord;
     int tmp_i;
     float tmp_f;
@@ -81,6 +90,9 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
         if (!(strTermIn >> tmp_s)) {
             cerr << "Error: " << "value type syntax error!" << endl;
             return "";
+        }
+
+        if ((*iter).unique) {
         }
     }
     if (strIn.bad()) {
