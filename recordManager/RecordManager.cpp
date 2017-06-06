@@ -16,7 +16,7 @@ using namespace std;
 
 bool RecordManager::insertRecord(string rawValues) {
     catalogmanager catalogMgr;
-    Table tableInfo = catalogMgr.GetTable(tableName);
+    tableInfo = catalogMgr.GetTable(tableName);
 
     const bool NO_SUCH_TABLE_ERROR = false; // for test
     if (NO_SUCH_TABLE_ERROR) {
@@ -40,12 +40,10 @@ bool RecordManager::insertRecord(string rawValues) {
     bufferMgr.FindSuitBlockinBuffer(tableName, resultRecord.length(), &blockNum, &blockOffset);
     bufferMgr.Insert(blockNum, blockOffset, (char *)resultRecord.c_str()); // TODO: 返回值？成功失败的标志？
 
-
     return true;
 }
 
 string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
-    // TODO: check unique and primary
     string resultRecord;
     int tmp_i;
     float tmp_f;
@@ -92,7 +90,8 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
             return "";
         }
 
-        if ((*iter).unique) {
+        if ((*iter).unique || (*iter).primary) {
+//            checkUnique() TODO: after done select
         }
     }
     if (strIn.bad()) {
@@ -106,4 +105,9 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
     resultRecord += "\n";
 
     return resultRecord;
+}
+
+bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClause) {
+
+    return true;
 }

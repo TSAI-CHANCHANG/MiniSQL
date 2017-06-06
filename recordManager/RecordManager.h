@@ -20,6 +20,7 @@ enum DataType {
 class RecordManager {
 private:
     string tableName;
+    Table tableInfo;
 
     string generateInsertValues(string rawValues, Table tableInfo);
 
@@ -27,8 +28,8 @@ public:
     RecordManager(const string tableName) : tableName(tableName) {}
 
     bool insertRecord(string rawValues);
+    bool selectRecords(vector<string> attributes, string rawWhereClause);
 //    bool deleteRecords(string tableName, string rawWhereClause);
-//    bool selectRecords(string tableName, vector<string> attributes, string rawWhereClause);
 };
 
 
