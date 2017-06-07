@@ -53,7 +53,7 @@ class BPLUSTREE
 public:
 	BPLUSTREE(int block_size);
 	~BPLUSTREE();
-	int CreateTree(int type, string *file_name);
+	
 	int CreateIndex(string *file_name, int type);
 	int DropIndex(string *file_name, int type);
 	int Insert(int type, string *file_name, string *key, int block, int offset);
@@ -68,6 +68,7 @@ private:
 	map<string, FLOATNODE*> float_map;
 	map<string, CHARNODE*> char_map;
 	int AddNode(int type, string *file_name, string *key, int block, int offset);
+	int CreateTree(int type, string *file_name);
 	//int DeleteNode(int type, string *file_name, string *skey);
 };
 
