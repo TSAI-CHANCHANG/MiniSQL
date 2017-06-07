@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <strstream>
+#include <regex>
 #include "RecordManager.h"
 #include "../catalogmanager.h"
 #include "../buffermanager.h"
@@ -39,6 +40,8 @@ bool RecordManager::insertRecord(string rawValues) {
     // TODO: resultRecord的最终形式的确定，换行？空格？
     bufferMgr.FindSuitBlockinBuffer(tableName, resultRecord.length(), &blockNum, &blockOffset);
     bufferMgr.Insert(blockNum, blockOffset, (char *)resultRecord.c_str()); // TODO: 返回值？成功失败的标志？
+
+    // TODO: update index, after specify index Manager interface
 
     return true;
 }
@@ -111,3 +114,52 @@ bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClau
 
     return true;
 }
+
+bool RecordManager::deleteRecords(string rawWhereClause) {
+
+    return true;
+}
+
+vector<intRestrict> RecordManager::parseWhere(string rawWhereClause) {
+    vector<intRestrict> restricts;
+    regex andRegex("\\s+and\\s+");
+    sregex_token_iterator
+            first{rawWhereClause.begin(), rawWhereClause.end(), andRegex, -1},
+            last;
+    vector<string> restrictions{first, last};
+
+    for (string restriction : restrictions) {
+        string::iterator iter;
+        RelationOp relationOp = nullptr;
+        for (RelationOp op = ne; op != eq; op++) {
+            if ((iter = find(restriction.begin(), restriction.end(), relationOps.find(op)->second)) !=
+                restriction.end()) {
+                relationOp = op;
+            }
+        }
+        if (iter == restriction.end()) {
+            cerr << "Error: " << "yet unsupported operation." << endl;
+            return restricts;
+        }
+        string attrName{restriction.begin(), iter};
+        attrName.erase(remove_if(attrName.begin(), attrName.end(), isspace), attrName.end());
+
+        string value{iter, restriction.end()};
+        value.erase(value.begin(), value.begin() + (relationOps.find(relationOp)->second).length());
+
+#if DEBUG_IT
+        cout << "[" << attrName << "]" << relationOps.find(relationOp)->second << "[" << value << "]" << endl;
+#endif
+
+#if 0
+        for (Attribute attr : tableInfo.Attr) {
+            if (attr.attrname == attrName) {
+
+            }
+        }
+#endif
+    }
+
+    return restricts;
+}
+

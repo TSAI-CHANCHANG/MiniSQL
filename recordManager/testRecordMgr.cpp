@@ -8,6 +8,8 @@
 using namespace std;
 
 int main(void) {
-    RecordManager recordManager;
+    RecordManager recordManager("test");
+    string whereClause1 = "a < 12";
+    recordManager.parseWhere(whereClause1);
     return 0;
 }
