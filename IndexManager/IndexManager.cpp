@@ -66,7 +66,7 @@ int BPLUSTREE::CreateTree(int type, string *file_name)
 				break;
 			index >> block >>  offset;
 			AddNode(type, file_name, &key, block, offset);
-		}
+ 		}
 	}
 	else if (type == TYPE_FLOAT)
 	{
@@ -355,6 +355,9 @@ int BPLUSTREE::Delete(int type, string * file_name, string * lbound, string * rb
 int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbound, int lopen, int ropen)
 {
 	stringstream ls(*lbound),rs(*rbound);
+	//Clear select.tmp
+	ofstream tmp("select.tmp");
+	tmp.close();
 
 	if (type == TYPE_INT)
 	{
@@ -456,8 +459,10 @@ int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbou
 		i = li;
 		ofstream tmp("select.tmp");
 		while (1)
-		{
-			tmp << p->block[i] << " " << p->offset[i] << endl;
+		{		
+			if ((p == right && i > ri) || (right->next == left))
+				break;
+			tmp << p->block[i] << " " << p->offset[i] << endl;		
 			if (p == right && i == ri)
 				break;
 			i++;
@@ -571,6 +576,8 @@ int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbou
 		ofstream tmp("select.tmp");
 		while (1)
 		{
+			if ((p == right && i > ri) || (right->next == left))
+				break;
 			tmp << p->block[i] << " " << p->offset[i] << endl;
 			if (p == right && i == ri)
 				break;
@@ -685,6 +692,8 @@ int BPLUSTREE::Find(int type, string * file_name, string * lbound, string * rbou
 		ofstream tmp("select.tmp");
 		while (1)
 		{
+			if ((p == right && i > ri) || (right->next == left))
+				break;
 			tmp << p->block[i] << " " << p->offset[i] << endl;
 			if (p == right && i == ri)
 				break;
@@ -851,10 +860,16 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 						temp++;
 					p = p->father;
 					temp++;
-					p->pointer.insert(p->pointer.begin() + temp, t);
-					if (temp != 1)
-						temp--;
-					p->key.insert(p->key.begin() + temp, t->key[0]);
+					if (temp != p->pointer.size())
+					{
+						p->pointer.insert(p->pointer.begin() + temp, t);
+						p->key.insert(p->key.begin() + temp - 1, t->key[0]);
+					}
+					else
+					{
+						p->pointer.push_back(t);
+						p->key.push_back(t->key[0]);
+					}
 				}
 				//Split non-leaf node
 				else
@@ -875,11 +890,25 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 					p->pointer.erase(p->pointer.begin() + temp);
 					temp = 0;
 					while(p->father->pointer[temp++] != p);
-					p->father->pointer.insert(p->father->pointer.begin() + temp, t);
+				/*	p->father->pointer.insert(p->father->pointer.begin() + temp, t);
 					temp--;
 					p->father->key.insert(p->father->key.begin() + temp, p->key[degree / 2]);
 					p->key.pop_back();
+					p = p->father;*/
+					//&)*%^)&(@^*(_$&^_*(&^_*(%^&*(@^$&%^&%_^$*(@&^*(!^*(@*(%$&@(&$@)(^$)*^$)(@*^_&
+					if (temp != p->father->pointer.size())
+					{
+						p->father->pointer.insert(p->father->pointer.begin() + temp, t);
+						p->father->key.insert(p->father->key.begin() + temp - 1, p->key[degree / 2]);
+					}
+					else
+					{
+						p->father->pointer.push_back(t);
+						p->father->key.push_back(p->key[degree / 2]);
+					}
+					p->key.pop_back();
 					p = p->father;
+					//&)*%^)&(@^*(_$&^_*(&^_*(%^&*(@^$&%^&%_^$*(@&^*(!^*(@*(%$&@(&$@)(^$)*^$)(@*^_&
 				}
 			}
 		}
@@ -1026,10 +1055,16 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 						temp++;
 					p = p->father;
 					temp++;
-					p->pointer.insert(p->pointer.begin() + temp, t);
-					if (temp != 1)
-						temp--;
-					p->key.insert(p->key.begin() + temp, t->key[0]);
+					if (temp != p->pointer.size())
+					{
+						p->pointer.insert(p->pointer.begin() + temp, t);
+						p->key.insert(p->key.begin() + temp - 1, t->key[0]);
+					}
+					else
+					{
+						p->pointer.push_back(t);
+						p->key.push_back(t->key[0]);
+					}
 				}
 				//Split non-leaf node
 				else
@@ -1050,9 +1085,16 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 					p->pointer.erase(p->pointer.begin() + temp);
 					temp = 0;
 					while (p->father->pointer[temp++] != p);
-					p->father->pointer.insert(p->father->pointer.begin() + temp, t);
-					temp--;
-					p->father->key.insert(p->father->key.begin() + temp, p->key[degree / 2]);
+					if (temp != p->father->pointer.size())
+					{
+						p->father->pointer.insert(p->father->pointer.begin() + temp, t);
+						p->father->key.insert(p->father->key.begin() + temp - 1, p->key[degree / 2]);
+					}
+					else
+					{
+						p->father->pointer.push_back(t);
+						p->father->key.push_back(p->key[degree / 2]);
+					}
 					p->key.pop_back();
 					p = p->father;
 				}
@@ -1201,10 +1243,16 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 						temp++;
 					p = p->father;
 					temp++;
-					p->pointer.insert(p->pointer.begin() + temp, t);
-					if (temp != 1)
-						temp--;
-					p->key.insert(p->key.begin() + temp, t->key[0]);
+					if (temp != p->pointer.size())
+					{
+						p->pointer.insert(p->pointer.begin() + temp, t);
+						p->key.insert(p->key.begin() + temp - 1, t->key[0]);
+					}
+					else
+					{
+						p->pointer.push_back(t);
+						p->key.push_back(t->key[0]);
+					}
 				}
 				//Split non-leaf node
 				else
@@ -1225,9 +1273,16 @@ int BPLUSTREE::AddNode(int type, string * file_name, string *skey,int block, int
 					p->pointer.erase(p->pointer.begin() + temp);
 					temp = 0;
 					while (p->father->pointer[temp++] != p);
-					p->father->pointer.insert(p->father->pointer.begin() + temp, t);
-					temp--;
-					p->father->key.insert(p->father->key.begin() + temp, p->key[degree / 2]);
+					if (temp != p->father->pointer.size())
+					{
+						p->father->pointer.insert(p->father->pointer.begin() + temp, t);
+						p->father->key.insert(p->father->key.begin() + temp - 1, p->key[degree / 2]);
+					}
+					else
+					{
+						p->father->pointer.push_back(t);
+						p->father->key.push_back(p->key[degree / 2]);
+					}
 					p->key.pop_back();
 					p = p->father;
 				}
@@ -1839,6 +1894,6 @@ int GetDegree(int block_size, int type)
 	}
 	degree = (block_size + type_size) / (POINTERSIZE + type_size);
 	//Degree >= 16
-	return 3;//degree;//#################################################################DEBUG
+	return degree;//#################################################################DEBUG
 }
 
