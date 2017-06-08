@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <strstream>
+#include <algorithm>
 #include <regex>
 #include "RecordManager.h"
 #include "../catalogmanager.h"
@@ -53,7 +54,7 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
     string tmp_s;
 
     // TODO: not check space in string
-    rawValues.erase(remove_if(rawValues.begin(), rawValues.end(), isspace), rawValues.end());
+    rawValues.erase(remove_if(rawValues.begin(), rawValues.end(), [](char x) { return isspace(x); }), rawValues.end());
     istrstream strIn(rawValues.c_str(), rawValues.length());
 
     for (auto iter = tableInfo.Attr.begin(); iter != tableInfo.Attr.end(); iter++) {
@@ -120,8 +121,8 @@ bool RecordManager::deleteRecords(string rawWhereClause) {
     return true;
 }
 
-vector<intRestrict> RecordManager::parseWhere(string rawWhereClause) {
-    vector<intRestrict> restricts;
+vector<Restrict> RecordManager::parseWhere(string rawWhereClause) {
+    vector<Restrict> restricts;
     regex andRegex("\\s+and\\s+");
     sregex_token_iterator
             first{rawWhereClause.begin(), rawWhereClause.end(), andRegex, -1},
@@ -130,36 +131,80 @@ vector<intRestrict> RecordManager::parseWhere(string rawWhereClause) {
 
     for (string restriction : restrictions) {
         string::iterator iter;
-        RelationOp relationOp = nullptr;
-        for (RelationOp op = ne; op != eq; op++) {
+        RelationOp relationOp = invalidOp;
+        for (int i = ne; i != eq; i++) {
+            RelationOp op = static_cast<RelationOp>(i);
             if ((iter = find(restriction.begin(), restriction.end(), relationOps.find(op)->second)) !=
                 restriction.end()) {
                 relationOp = op;
             }
         }
-        if (iter == restriction.end()) {
+        if (relationOp == invalidOp) {
             cerr << "Error: " << "yet unsupported operation." << endl;
-            return restricts;
+            return vector<Restrict>(0);
         }
         string attrName{restriction.begin(), iter};
-        attrName.erase(remove_if(attrName.begin(), attrName.end(), isspace), attrName.end());
+        attrName.erase(remove_if(attrName.begin(), attrName.end(), [](char x) { return isspace(x); }), attrName.end());
 
         string value{iter, restriction.end()};
         value.erase(value.begin(), value.begin() + (relationOps.find(relationOp)->second).length());
+        value.erase(remove_if(value.begin(), value.end(), [](char x) { return isspace(x); }), value.end());
 
 #if DEBUG_IT
         cout << "[" << attrName << "]" << relationOps.find(relationOp)->second << "[" << value << "]" << endl;
 #endif
 
-#if 0
-        for (Attribute attr : tableInfo.Attr) {
-            if (attr.attrname == attrName) {
+#if 1
+        vector<Attribute>::iterator attrIter;
+        for (attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+            if (attrIter->attrname == attrName) {
+                istrstream valueStrIn(value.c_str(), value.length());
 
+                string tmp;
+                switch (attrIter->type) {
+                    case int_t:
+                        int tmp_i;
+                        if (valueStrIn >> tmp_i && !(valueStrIn >> tmp)) {
+                            Restrict *intRestrict = new IntRestrict(attrName, relationOp, tmp_i);
+                            restricts.push_back(*intRestrict);
+                            delete (intRestrict);
+                        } else {
+                            cerr << "Error: " << " type not match!" << endl;
+                        }
+                        break;
+
+                    case float_t:
+                        float tmp_f;
+                        if (valueStrIn >> tmp_f && !(valueStrIn >> tmp)) {
+                            Restrict *floatRestrict = new FloatRestrict(attrName, relationOp, tmp_f);
+                            restricts.push_back(*floatRestrict);
+                            delete (floatRestrict);
+                        } else {
+                            cerr << "Error: " << " type not match!" << endl;
+                        }
+                        break;
+
+                    case char_t:
+                        string tmp_s;
+                        if (valueStrIn >> tmp_s) {
+                            if (*tmp_s.begin() == '\'' && *(tmp_s.end() - 1) == '\'') {
+                                Restrict *stringRestrict =
+                                        new StringRestrict(attrName, relationOp, tmp_s.substr(1, tmp_s.length() - 2));
+                                restricts.push_back(*stringRestrict);
+                                delete (stringRestrict);
+                            }
+                        } else {
+                            cerr << "Error: " << " type not match!" << endl;
+                        }
+                        break;
+                }
+            } else {
+                cerr << "Error: " << "No such attribute" << endl;
+                return vector<Restrict>(0);
             }
         }
 #endif
     }
-
     return restricts;
 }
 
