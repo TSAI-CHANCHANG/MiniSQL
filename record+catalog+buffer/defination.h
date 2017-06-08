@@ -7,7 +7,7 @@ const int BLOCKNUMBER = 10;
 
 #define TYPE_INT 1
 #define TYPE_FLOAT 2
-#define TYPE_CHAR 4
+#define TYPE_CHAR 3
 
 
 

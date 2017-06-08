@@ -117,12 +117,12 @@ private:
     string tableName;
     Table tableInfo;
 
-    string generateInsertValues(string rawValues, Table tableInfo);
+    string generateInsertValues(string rawValues);
 
 public:
     RecordManager(const string tableName) : tableName(tableName) {}
 
-    vector<Restrict *> parseWhere(string rawWhereClause);
+    vector<Restrict *> parseWhere(string rawWhereClause = nullptr); // TODO: be private
     bool insertRecord(string rawValues);
     bool selectRecords(vector<string> attributes, string rawWhereClause);
     bool deleteRecords(string rawWhereClause);

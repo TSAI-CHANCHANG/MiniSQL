@@ -26,7 +26,7 @@ bool RecordManager::insertRecord(string rawValues) {
         cerr << "Error: " << "No such table named: " << tableName << endl;
     }
 
-    string resultRecord = generateInsertValues(rawValues, tableInfo);
+    string resultRecord = generateInsertValues(rawValues);
 #if DEBUG_IT
     cout << "Insert record:" << endl;
     cout << resultRecord;
@@ -46,7 +46,7 @@ bool RecordManager::insertRecord(string rawValues) {
     return true;
 }
 
-string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
+string RecordManager::generateInsertValues(string rawValues) {
     string resultRecord;
     int tmp_i;
     float tmp_f;
@@ -57,13 +57,13 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
     istrstream strIn(rawValues.c_str(), rawValues.length());
 
     for (auto iter = tableInfo.Attr.begin(); iter != tableInfo.Attr.end(); iter++) {
-        if (iter != tableInfo.Attr.begin() && iter != tableInfo.Attr.end() - 1)
+        if (iter != tableInfo.Attr.begin() && iter != tableInfo.Attr.end())
             resultRecord += " ";
 
         string valueTerm;
 
         getline(strIn, valueTerm, ','); // TODO: not check comma in string
-        istrstream strTermIn(rawValues.c_str(), rawValues.length());
+        istrstream strTermIn(valueTerm.c_str(), valueTerm.length());
         switch ((*iter).type) {
             case int_t:
                 strTermIn >> tmp_i; // TODO: check typeError
@@ -71,15 +71,17 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
                 break;
             case float_t:
                 strTermIn >> tmp_f;
+                resultRecord += to_string(tmp_f);
                 break;
             case char_t:
-                if (*valueTerm.begin() != '\'' || *(valueTerm.end() - 1) != '\'') {
+                strTermIn >> tmp_s;
+                if (*tmp_s.begin() != '\'' || *(tmp_s.end() - 1) != '\'') {
                     cerr << "Error: " << "string input syntax error!\n" << valueTerm << endl;
                     return "";
                 }
-                valueTerm.erase(valueTerm.begin());
-                valueTerm.erase(valueTerm.end());
-                strTermIn >> valueTerm;
+                tmp_s.erase(tmp_s.begin());
+                tmp_s.erase(tmp_s.end() - 1);
+                resultRecord += tmp_s;
                 break;
             default:
                 break;
@@ -88,8 +90,11 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
             cerr << "Error: " << "value not match error!" << endl;
             return "";
         }
-        if (!(strTermIn >> tmp_s)) {
+        if ((strTermIn >> tmp_s)) {
             cerr << "Error: " << "value type syntax error!" << endl;
+#if DEBUG_IT
+            cout << tmp_s << endl;
+#endif
             return "";
         }
 
@@ -101,8 +106,11 @@ string RecordManager::generateInsertValues(string rawValues, Table tableInfo) {
         cerr << "Error: " << "values list error!" << endl;
         return "";
     }
-    if (!(strIn >> tmp_s)) {
+    if ((strIn >> tmp_s)) {
         cerr << "Error: " << "values list not match error!" << endl;
+#if DEBUG_IT
+        cout << tmp_s << endl;
+#endif
         return "";
     }
     resultRecord += "\n";
@@ -115,8 +123,12 @@ bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClau
     return true;
 }
 
-bool RecordManager::deleteRecords(string rawWhereClause) {
-
+bool RecordManager::deleteRecords(string rawWhereClause = "") {
+    if (rawWhereClause.empty()) {
+        // TODO: simple fetch all
+    } else {
+        vector<Restrict *> restricts = parseWhere(rawWhereClause);
+    }
     return true;
 }
 
