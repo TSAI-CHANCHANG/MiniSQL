@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 #include <limits>
-#include "../table.h"
+#include "../record+catalog+buffer/table.h"
 
 using namespace std;
 
@@ -29,7 +29,7 @@ enum RelationOp {
     eq
 };
 
-map<RelationOp, string> relationOps{
+static map<RelationOp, string> relationOps{
         {ne,  "<>"},
         {nlt, ">="},
         {ngt, "<="},
@@ -41,7 +41,7 @@ map<RelationOp, string> relationOps{
 struct Restrict {
     Restrict() {}
 
-    Restrict(string attrName, RelationOp op) : attrName(attrName), op(op) {}
+    Restrict(string attrName, RelationOp op, DataType type) : attrName(attrName), op(op), type(type) {}
 
     string attrName;
     RelationOp op;
@@ -49,21 +49,22 @@ struct Restrict {
 };
 
 struct IntRestrict : Restrict {
-    IntRestrict(string attrName, RelationOp op, int value) : attrName(attrName), op(op), value(value), type(int_t) {}
+    IntRestrict(string attrName, RelationOp op, int value) :
+            Restrict(attrName, op, int_t), value(value) {}
 
     int value;
 };
 
 struct FloatRestrict : Restrict {
     FloatRestrict(string attrName, RelationOp op, float value) :
-            attrName(attrName), op(op), value(value), type(float_t) {}
+            Restrict(attrName, op, float_t), value(value) {}
 
     float value;
 };
 
 struct StringRestrict : Restrict {
     StringRestrict(string attrName, RelationOp op, string value) :
-            attrName(attrName), op(op), value(value), type(char_t) {}
+            Restrict(attrName, op, char_t), value(value) {}
 
     string value;
 };
@@ -121,7 +122,7 @@ private:
 public:
     RecordManager(const string tableName) : tableName(tableName) {}
 
-    vector<Restrict> parseWhere(string rawWhereClause);
+    vector<Restrict *> parseWhere(string rawWhereClause);
     bool insertRecord(string rawValues);
     bool selectRecords(vector<string> attributes, string rawWhereClause);
     bool deleteRecords(string rawWhereClause);

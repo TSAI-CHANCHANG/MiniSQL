@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <regex>
 #include "RecordManager.h"
-#include "../catalogmanager.h"
-#include "../buffermanager.h"
-#include "../table.h"
+#include "../record+catalog+buffer/catalogmanager.h"
+#include "../record+catalog+buffer/buffermanager.h"
+#include "../record+catalog+buffer/table.h"
 
 #define DEBUG_IT true
 
@@ -27,7 +27,6 @@ bool RecordManager::insertRecord(string rawValues) {
     }
 
     string resultRecord = generateInsertValues(rawValues, tableInfo);
-
 #if DEBUG_IT
     cout << "Insert record:" << endl;
     cout << resultRecord;
@@ -121,8 +120,8 @@ bool RecordManager::deleteRecords(string rawWhereClause) {
     return true;
 }
 
-vector<Restrict> RecordManager::parseWhere(string rawWhereClause) {
-    vector<Restrict> restricts;
+vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
+    vector<Restrict *> restricts;
     regex andRegex("\\s+and\\s+");
     sregex_token_iterator
             first{rawWhereClause.begin(), rawWhereClause.end(), andRegex, -1},
@@ -130,23 +129,21 @@ vector<Restrict> RecordManager::parseWhere(string rawWhereClause) {
     vector<string> restrictions{first, last};
 
     for (string restriction : restrictions) {
-        string::iterator iter;
         RelationOp relationOp = invalidOp;
-        for (int i = ne; i != eq; i++) {
+        for (int i = (int)ne; i != (int)eq + 1; i++) {
             RelationOp op = static_cast<RelationOp>(i);
-            if ((iter = find(restriction.begin(), restriction.end(), relationOps.find(op)->second)) !=
-                restriction.end()) {
+            if (restriction.find(relationOps.find(op)->second) != string::npos) {
                 relationOp = op;
             }
         }
         if (relationOp == invalidOp) {
             cerr << "Error: " << "yet unsupported operation." << endl;
-            return vector<Restrict>(0);
+            return vector<Restrict *>(0);
         }
-        string attrName{restriction.begin(), iter};
+        string attrName = restriction.substr(0, restriction.find(relationOps.find(relationOp)->second));
         attrName.erase(remove_if(attrName.begin(), attrName.end(), [](char x) { return isspace(x); }), attrName.end());
 
-        string value{iter, restriction.end()};
+        string value = restriction.substr(restriction.find(relationOps.find(relationOp)->second), string::npos);
         value.erase(value.begin(), value.begin() + (relationOps.find(relationOp)->second).length());
         value.erase(remove_if(value.begin(), value.end(), [](char x) { return isspace(x); }), value.end());
 
@@ -166,8 +163,7 @@ vector<Restrict> RecordManager::parseWhere(string rawWhereClause) {
                         int tmp_i;
                         if (valueStrIn >> tmp_i && !(valueStrIn >> tmp)) {
                             Restrict *intRestrict = new IntRestrict(attrName, relationOp, tmp_i);
-                            restricts.push_back(*intRestrict);
-                            delete (intRestrict);
+                            restricts.push_back(intRestrict);
                         } else {
                             cerr << "Error: " << " type not match!" << endl;
                         }
@@ -177,8 +173,7 @@ vector<Restrict> RecordManager::parseWhere(string rawWhereClause) {
                         float tmp_f;
                         if (valueStrIn >> tmp_f && !(valueStrIn >> tmp)) {
                             Restrict *floatRestrict = new FloatRestrict(attrName, relationOp, tmp_f);
-                            restricts.push_back(*floatRestrict);
-                            delete (floatRestrict);
+                            restricts.push_back(floatRestrict);
                         } else {
                             cerr << "Error: " << " type not match!" << endl;
                         }
@@ -190,8 +185,7 @@ vector<Restrict> RecordManager::parseWhere(string rawWhereClause) {
                             if (*tmp_s.begin() == '\'' && *(tmp_s.end() - 1) == '\'') {
                                 Restrict *stringRestrict =
                                         new StringRestrict(attrName, relationOp, tmp_s.substr(1, tmp_s.length() - 2));
-                                restricts.push_back(*stringRestrict);
-                                delete (stringRestrict);
+                                restricts.push_back(stringRestrict);
                             }
                         } else {
                             cerr << "Error: " << " type not match!" << endl;
@@ -200,11 +194,25 @@ vector<Restrict> RecordManager::parseWhere(string rawWhereClause) {
                 }
             } else {
                 cerr << "Error: " << "No such attribute" << endl;
-                return vector<Restrict>(0);
+                return vector<Restrict *>(0);
             }
         }
 #endif
     }
+
+#if DEBUG_IT
+    for (Restrict *restrict : restricts) {
+        cout << restrict->attrName << relationOps.find(restrict->op)->second << restrict->op;
+        switch (restrict->type) {
+            case int_t:
+                cout << ((IntRestrict *)(restrict))->value << endl;
+            case float_t:
+                cout << ((FloatRestrict *)(restrict))->value << endl;
+            case char_t:
+                cout << ((StringRestrict *)(restrict))->value << endl;
+        }
+    }
+#endif
     return restricts;
 }
 

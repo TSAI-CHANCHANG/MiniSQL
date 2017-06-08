@@ -104,9 +104,9 @@ int buffermanager::WriteIn(string fileName, int offset, int blocknum)
 
     blocks[blocknum].SetBlock(fileName, offset);
 
-    int l = File.tellg();
+    int l = (int)File.tellg();
     File.seekg(0, ios::end);
-    l = File.tellg()-l;//记录文件长度
+    l = (int)(File.tellg()) - l;//记录文件长度
     File.seekg(0, ios::beg);
     if (l<offset*BLOCKSIZE) return NOT_ENOUGH;
     File.clear();

@@ -3,5 +3,19 @@ project(MiniSQL)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES table.h runtimeexception.h buffermanager.cpp buffermanager.h catalogmanager.cpp catalogmanager.h Interpret.cpp Interpreter.h recordManager/RecordManager.cpp recordManager/RecordManager.h recordManager/testRecordMgr.cpp)
+set(SOURCE_FILES
+        recordManager/testRecordMgr.cpp
+        recordManager/RecordManager.cpp
+        recordManager/RecordManager.h
+
+#        record+catalog+buffer/main.cpp
+        record+catalog+buffer/table.h
+        record+catalog+buffer/catalogmanager.h
+        record+catalog+buffer/catalogmanager.cpp
+        record+catalog+buffer/buffermanager.h
+        record+catalog+buffer/buffermanager.cpp
+        record+catalog+buffer/defination.h
+        record+catalog+buffer/IndexManager.cpp
+        record+catalog+buffer/IndexManager.h
+        )
 add_executable(MiniSQL ${SOURCE_FILES})

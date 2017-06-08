@@ -104,7 +104,7 @@ void catalogmanager::SetTable(Table& tab)
     for (int j = 0;j<tab.Attrnum;j++)
     {
         int length = tab.Attr[j].attrname.length()+tab.Attr[j].indexname.length()+4;//估测的占用字节流的长度
-        if (strout.tellp()+length>BLOCKSIZE)//如果这个block放不下了
+        if ((int)(strout.tellp())+length>BLOCKSIZE)//如果这个block放不下了
         {
             strcpy(blocks[blocknum].content,table);//将字符流内容拷进来
             blocks[blocknum].SetBlock(tab.getName()+".tab",i);
@@ -127,7 +127,7 @@ void catalogmanager::SetTable(Table& tab)
     for (int j = 0;j<tab.Attrnum;j++)
     {
         int length = tab.Attr[j].attrname.length()+tab.Attr[j].indexname.length()+4;//估测的占用字节流的长度
-        if (strout.tellp()+length>BLOCKSIZE)//如果这个block放不下了
+        if ((int)(strout.tellp())+length>BLOCKSIZE)//如果这个block放不下了
         {
             strcpy(blocks[blocknum].content,table);//将字符流内容拷进来
             blocks[blocknum].SetBlock(tab.getName()+".tab",i);
@@ -165,7 +165,7 @@ void catalogmanager::PrepareForIndex(string FromFile, string ToFile, int tpnum, 
         istrstream STR(str.c_str(),str.length());
         int l = STR.tellg();
         STR.seekg(0,ios::end);
-        l = STR.tellg()-l;
+        l = (int)(STR.tellg())-l;
         STR.seekg(0,ios::beg);
         STR.clear();
 
