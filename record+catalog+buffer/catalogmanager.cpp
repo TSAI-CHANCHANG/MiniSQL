@@ -58,7 +58,7 @@ int catalogmanager::DropTable(string Tablename, BPLUSTREE& BT)
         if (tab.Attr[i].indexname != "noindex")//如果某一个attribute上有index
         {
             string filename = tab.Attr[i].indexname+".idx";
-            BT.DropIndex(&filename);
+            BT.DropIndex(&filename,tab.Attr[i].type);
         }
     }
     buf.DeleteFile(Tablename+".rec");//删表的内容
@@ -79,7 +79,7 @@ int catalogmanager::DropIndex(string Indexname, string Tablename, BPLUSTREE& BT)
         if (tab.Attr[i].indexname==Indexname)//找到这个index对应的attribute
         {
             string filename = tab.Attr[i].indexname+".idx";
-            BT.DropIndex(&filename);
+            BT.DropIndex(&filename,tab.Attr[i].type);
             tab.Attr[i].indexname = "noindex";//设为noindex
             break;
         }
@@ -223,7 +223,7 @@ int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrn
             string filename = tab.Attr[i].indexname+".idx";
             PrepareForIndex(tab.getName()+".rec",filename,i,tab);
 
-            BT.CreateIndex(&tab.Attr[i].attrname,&filename,tab.Attr[i].type);
+            BT.CreateIndex(&filename,tab.Attr[i].type);
             break;
         }
     if (i==tab.Attrnum){
@@ -331,7 +331,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& 
         filename = tab.Attr[tab.primary].indexname+".idx";
         CreateEmptyFile(filename);
 
-        BT.CreateIndex(&tab.Attr[tab.primary].attrname,&filename,tab.Attr[tab.primary].type);
+        BT.CreateIndex(&filename,tab.Attr[tab.primary].type);
     }
     SetTable(tab);//将这个表的内容存回文件中
     return SUCCESS;

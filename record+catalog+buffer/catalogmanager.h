@@ -1,7 +1,7 @@
 #ifndef CATALOGMANAGER_H
 #define CATALOGMANAGER_H
 #include "buffermanager.h"
-#include "IndexManager/IndexManager.h"
+#include "IndexManager.h"
 #include "table.h"
 #include "defination.h"
 
@@ -36,8 +36,6 @@ private:
     buffermanager buf;
 
     void CreateEmptyFile(string fileName);
-
-
 
     void SetTable(Table& tab);
     //通过缓存，将一个表存回文件中

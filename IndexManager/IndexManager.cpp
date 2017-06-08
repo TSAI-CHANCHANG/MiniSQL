@@ -26,10 +26,12 @@ BPLUSTREE::BPLUSTREE(int block_size):block_size(block_size)
 		}
 		else if (type == TYPE_FLOAT)
 		{
+			CreateTree(type, &file_name);
 			//Create float B+Tree and add root node pointer into map
 		}
 		else if (type == TYPE_CHAR)
 		{
+			CreateTree(type, &file_name);
 			//Create char B+Tree and add root node pointer into map
 		};
 	}
