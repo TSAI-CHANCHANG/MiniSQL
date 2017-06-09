@@ -69,18 +69,23 @@ struct StringRestrict : Restrict {
     string value;
 };
 
-#if 0
-struct Restrict {
-    Restrict(bool valid = true) : valid(valid) {}
+#if 1
+
+struct Range {
+    Range() {}
+    Range(bool valid, DataType type, string attrName) :
+            valid(valid), type(type), attrName(attrName) {}
 
     bool valid;
     DataType type;
     string attrName;
 };
 
-struct IntRestrict : Restrict {
-    IntRestrict() : type(int_t), minValue(numeric_limits<int>::min()), maxValue(numeric_limits<int>::max()),
-                    includeMin(false), includeMax(false) {}
+struct IntRange : Range {
+    IntRange(string attrName) :
+            Range(true, int_t, attrName),
+            minValue(numeric_limits<int>::min()), maxValue(numeric_limits<int>::max()),
+            includeMin(false), includeMax(false) {}
 
     int minValue;
     bool includeMin;
@@ -89,9 +94,11 @@ struct IntRestrict : Restrict {
     vector<int> excludeValues;
 };
 
-struct FloatRestrict : Restrict {
-    FloatRestrict() : type(float_t), minValue(numeric_limits<float>::min()), maxValue(numeric_limits<float>::max()),
-                      includeMin(false), includeMax(false) {}
+struct FloatRange : Range {
+    FloatRange(string attrName) :
+            Range(true, float_t, attrName),
+            minValue(numeric_limits<float>::min()), maxValue(numeric_limits<float>::max()),
+            includeMin(false), includeMax(false) {}
 
     float minValue;
     bool includeMin;
@@ -100,12 +107,10 @@ struct FloatRestrict : Restrict {
     vector<float> excludeValues;
 };
 
-struct StringRestrict : Restrict {
-    StringRestrict() {
-        type = char_t;
-    }
+struct StringRange : Range {
+    StringRange(string attrName) :
+            Range(true, char_t, attrName) {}
 
-    string attrName;
     string value;
     vector<string> excludeValues;
 };
@@ -123,6 +128,8 @@ public:
     RecordManager(const string tableName) : tableName(tableName) {}
 
     vector<Restrict *> parseWhere(string rawWhereClause = nullptr); // TODO: be private
+    vector<Range *> generateRange(vector<Restrict *> restricts); // TODO: be private
+    bool updateRange(Range *range, const Restrict *restrict); // TODO: be private
     bool insertRecord(string rawValues);
     bool selectRecords(vector<string> attributes, string rawWhereClause);
     bool deleteRecords(string rawWhereClause);

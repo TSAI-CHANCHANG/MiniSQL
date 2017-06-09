@@ -127,7 +127,8 @@ bool RecordManager::deleteRecords(string rawWhereClause = "") {
     if (rawWhereClause.empty()) {
         // TODO: simple fetch all
     } else {
-        vector<Restrict *> restricts = parseWhere(rawWhereClause);
+        vector<Restrict *> restricts = parseWhere(rawWhereClause); // TODO: 记得delete掉
+
     }
     return true;
 }
@@ -203,6 +204,8 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
                             cerr << "Error: " << " type not match!" << endl;
                         }
                         break;
+                    default:
+                        break;
                 }
             } else {
                 cerr << "Error: " << "No such attribute" << endl;
@@ -226,5 +229,283 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
     }
 #endif
     return restricts;
+}
+
+vector<Range *> RecordManager::generateRange(vector<Restrict *> restricts) {
+    vector<Range *> ranges;
+    for (Restrict *restrict : restricts) {
+        string attrName = restrict->attrName;
+        vector<Range *>::iterator rangeIter = find_if(ranges.begin(), ranges.end(), [attrName](Range *range) -> bool {
+            return range->attrName == attrName;
+        });
+
+        if (rangeIter == ranges.end()) {
+            switch (restrict->type) {
+                case int_t: {
+                    IntRange *intRange = new IntRange(attrName);
+                    IntRestrict *intRestrict = static_cast<IntRestrict *>(restrict);
+                    switch (intRestrict->op) {
+                        case ne:
+                            intRange->excludeValues.push_back(intRestrict->value);
+                            break;
+                        case nlt:
+                            intRange->minValue = intRestrict->value;
+                            intRange->includeMin = true;
+                            break;
+                        case ngt:
+                            intRange->maxValue = intRestrict->value;
+                            intRange->includeMax = true;
+                            break;
+                        case lt:
+                            intRange->maxValue = intRestrict->value;
+                            intRange->includeMax = false;
+                            break;
+                        case gt:
+                            intRange->minValue = intRestrict->value;
+                            intRange->includeMin = false;
+                            break;
+                        case eq:
+                            intRange->minValue = intRange->maxValue = intRestrict->value;
+                            intRange->includeMax = intRange->includeMin = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    ranges.push_back(static_cast<Range *>(intRange));
+                    break;
+                }
+                case float_t: {
+                    FloatRange *floatRange = new FloatRange(attrName);
+                    FloatRestrict *floatRestrict = static_cast<FloatRestrict *>(restrict);
+                    switch (floatRestrict->op) {
+                        case ne:
+                            floatRange->excludeValues.push_back(floatRestrict->value);
+                            break;
+                        case nlt:
+                            floatRange->minValue = floatRestrict->value;
+                            floatRange->includeMin = true;
+                            break;
+                        case ngt:
+                            floatRange->maxValue = floatRestrict->value;
+                            floatRange->includeMax = true;
+                            break;
+                        case lt:
+                            floatRange->maxValue = floatRestrict->value;
+                            floatRange->includeMax = false;
+                            break;
+                        case gt:
+                            floatRange->minValue = floatRestrict->value;
+                            floatRange->includeMin = false;
+                            break;
+                        case eq:
+                            floatRange->minValue = floatRange->maxValue = floatRestrict->value;
+                            floatRange->includeMax = floatRange->includeMin = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    ranges.push_back(static_cast<Range *>(floatRange));
+                    break;
+                }
+                case char_t: {
+                    StringRange *stringRange = new StringRange(attrName);
+                    StringRestrict *stringRestrict = static_cast<StringRestrict *>(restrict);
+                    switch (stringRestrict->op) {
+                        case ne:
+                            stringRange->excludeValues.push_back(stringRestrict->value);
+                            break;
+                        case eq:
+                            stringRange->value = stringRestrict->value;
+                        default:
+                            break;
+                    }
+                    break;
+                }
+            }
+        } else {
+            if (!updateRange(*rangeIter, restrict)) {
+                ranges.empty();
+                return ranges;
+            }
+        }
+    }
+    return ranges;
+}
+
+bool RecordManager::updateRange(Range *range, const Restrict *restrict) {
+    switch (restrict->type) {
+        case int_t:
+            IntRestrict *intRestrict = static_cast<IntRestrict *>(restrict);
+            IntRange *intRange = static_cast<IntRange *>(range);
+            switch (restrict->op) {
+                case ne: {
+                    intRange->excludeValues.push_back(intRestrict->value);
+                    break;
+                }
+                case nlt: {
+                    if (intRestrict->value >= intRange->maxValue && !intRange->includeMax ||
+                        intRestrict->value > intRange->maxValue) {
+                        return false;
+                    }
+                    if (intRestrict->value > intRange->minValue) {
+                        intRange->minValue = intRestrict->value;
+                        intRange->includeMin = true;
+                    }
+                    break;
+                }
+                case ngt: {
+                    if (intRestrict->value <= intRange->minValue && !intRange->includeMin ||
+                        intRestrict->value < intRange->minValue) {
+                        return false;
+                    }
+                    if (intRestrict->value < intRange->maxValue) {
+                        intRange->maxValue = intRestrict->value;
+                        intRange->includeMax = true;
+                    }
+                    break;
+                }
+                case lt: {
+                    if (intRestrict->value < intRange->minValue ||
+                        intRestrict->value == intRange->minValue && !intRange->includeMin) {
+                        return false;
+                    }
+                    if (intRestrict->value < intRange->maxValue ||
+                        intRestrict->value == intRange->maxValue && intRange->includeMax) {
+                        intRange->maxValue = intRestrict->value;
+                        intRange->includeMax = false;
+                    }
+                    break;
+                }
+                case gt: {
+                    if (intRestrict->value > intRange->maxValue ||
+                        intRestrict->value == intRange->maxValue && !intRange->includeMax) {
+                        return false;
+                    }
+                    if (intRestrict->value > intRange->minValue ||
+                        intRestrict->value == intRange->minValue && intRange->includeMin) {
+                        intRange->minValue = intRestrict->value;
+                        intRange->includeMin = false;
+                    }
+                    break;
+                }
+                case eq:
+                    if (intRestrict->value > intRange->maxValue ||
+                        intRestrict->value < intRange->minValue ||
+                        intRestrict->value == intRange->maxValue && !intRange->includeMax ||
+                        intRestrict->value == intRange->minValue && !intRange->includeMin) {
+                        return false;
+                    }
+                    if (intRange->excludeValues.end() !=
+                        find(intRange->excludeValues.begin(), intRange->excludeValues.end(), intRestrict->value)) {
+                        return false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case float_t: // TODO: need to refactor
+            FloatRestrict *floatRestrict = static_cast<FloatRestrict *>(restrict);
+            FloatRange *floatRange = static_cast<FloatRange *>(range);
+            switch (restrict->op) {
+                case ne: {
+                    floatRange->excludeValues.push_back(floatRestrict->value);
+                    break;
+                }
+                case nlt: {
+                    if (floatRestrict->value >= floatRange->maxValue && !floatRange->includeMax ||
+                        floatRestrict->value > floatRange->maxValue) {
+                        return false;
+                    }
+                    if (floatRestrict->value > floatRange->minValue) {
+                        floatRange->minValue = floatRestrict->value;
+                        floatRange->includeMin = true;
+                    }
+                    break;
+                }
+                case ngt: {
+                    if (floatRestrict->value <= floatRange->minValue && !floatRange->includeMin ||
+                        floatRestrict->value < floatRange->minValue) {
+                        return false;
+                    }
+                    if (floatRestrict->value < floatRange->maxValue) {
+                        floatRange->maxValue = floatRestrict->value;
+                        floatRange->includeMax = true;
+                    }
+                    break;
+                }
+                case lt: {
+                    if (floatRestrict->value < floatRange->minValue ||
+                        floatRestrict->value == floatRange->minValue && !floatRange->includeMin) {
+                        return false;
+                    }
+                    if (floatRestrict->value < floatRange->maxValue ||
+                        floatRestrict->value == floatRange->maxValue && floatRange->includeMax) {
+                        floatRange->maxValue = floatRestrict->value;
+                        floatRange->includeMax = false;
+                    }
+                    break;
+                }
+                case gt: {
+                    if (floatRestrict->value > floatRange->maxValue ||
+                        floatRestrict->value == floatRange->maxValue && !floatRange->includeMax) {
+                        return false;
+                    }
+                    if (floatRestrict->value > floatRange->minValue ||
+                        floatRestrict->value == floatRange->minValue && floatRange->includeMin) {
+                        floatRange->minValue = floatRestrict->value;
+                        floatRange->includeMin = false;
+                    }
+                    break;
+                }
+                case eq:
+                    if (floatRestrict->value > floatRange->maxValue ||
+                        floatRestrict->value < floatRange->minValue ||
+                        floatRestrict->value == floatRange->maxValue && !floatRange->includeMax ||
+                        floatRestrict->value == floatRange->minValue && !floatRange->includeMin) {
+                        return false;
+                    }
+                    if (floatRange->excludeValues.end() !=
+                        find(floatRange->excludeValues.begin(), floatRange->excludeValues.end(),
+                             floatRestrict->value)) {
+                        return false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case char_t:
+            StringRestrict *stringRestrict = static_cast<StringRestrict *>(restrict);
+            StringRange *stringRange = static_cast<StringRange *>(range);
+            switch (restrict->op) {
+                case ne: {
+                    if (stringRange->value == stringRestrict->value) {
+                        return false;
+                    }
+                    if (stringRange->value == "") {
+                        stringRange->excludeValues.push_back(stringRestrict->value);
+                    }
+                    break;
+                }
+                case eq: {
+                    if (stringRange->value != "" && stringRange->value != stringRestrict->value) {
+                        return false;
+                    }
+                    if (stringRange->excludeValues.end() !=
+                        find(stringRange->excludeValues.begin(), stringRange->excludeValues.end(),
+                             stringRestrict->value)) {
+                        return false;
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+    return true;
 }
 
