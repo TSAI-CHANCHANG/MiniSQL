@@ -642,7 +642,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 
 	if (end == -1)
 	{
-		end = SQLSentence.find(';', 0) - 1;
+		end = SQLSentence.find(';', 0);
 		while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)
 			--end;
 		while (SQLSentence[SQLCurrentPointer] == ' ' && end > SQLCurrentPointer)
