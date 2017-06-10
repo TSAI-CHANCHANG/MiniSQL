@@ -10,7 +10,6 @@ const int BLOCKNUMBER = 10;
 #define TYPE_CHAR 3
 
 
-
 #define ERROR_TYPE -1
 #define ERROR_FILE -2
 #define ERROR_INDEX_EXISTS -3

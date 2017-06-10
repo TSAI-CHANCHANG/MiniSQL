@@ -45,6 +45,9 @@ bool RecordManager::insertRecord(string rawValues) {
 #endif
     bufferMgr.Insert(blockNum, blockOffset, (char *)resultRecord.c_str()); // TODO: 返回值？成功失败的标志？
 
+#if DEBUG_IT
+#endif
+
     // TODO: update index, after specify index Manager interface
 
     return true;

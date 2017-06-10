@@ -1,5 +1,5 @@
 #include <iostream>
-#include <fstream> 
+#include <fstream>
 #include<cstdio>
 #include<string.h>
 
@@ -10,16 +10,15 @@ block blocks[BLOCKNUMBER];//预计有10个buffer中的block
 
 short flag;
 
-void block::ClearBlock(){
-    for (int i=0;i<BLOCKSIZE+1;i++) content[i]=0;
+void block::ClearBlock() {
+    for (int i = 0; i < BLOCKSIZE + 1; i++) content[i] = 0;
     filename = "";
     dirty = pin = used = false;
     usedsize = 0;
     fileoffset = 0;
 }
 
-void block::SetBlock(string filename, int fileoffset)
-{
+void block::SetBlock(string filename, int fileoffset) {
     this->filename = filename;
     this->fileoffset = fileoffset;
     dirty = false;
@@ -29,75 +28,65 @@ void block::SetBlock(string filename, int fileoffset)
     Recenttime = time(NULL);
 }
 
-int block::FindUsedSize()
-{
-    for (int i = 0; i< BLOCKSIZE; i++)
-        if (content[i]=='\0') return i;
+int block::FindUsedSize() {
+    for (int i = 0; i < BLOCKSIZE; i++)
+        if (content[i] == '\0') return i;
     return BLOCKSIZE;
 }
 
-buffermanager::buffermanager()
-{
-    for (int i = 0; i<BLOCKNUMBER;i++)
+buffermanager::buffermanager() {
+    for (int i = 0; i < BLOCKNUMBER; i++)
         blocks[i].ClearBlock();
 }
 
-buffermanager::~buffermanager()
-{
-    for (int i = 0; i<BLOCKNUMBER; i++)
+buffermanager::~buffermanager() {
+    for (int i = 0; i < BLOCKNUMBER; i++)
         WriteBack(i);
 }
 
-char* buffermanager::GetDetail(int blocknum, int blockoffset)
-{
-    return blocks[blocknum].content+blockoffset;
+char *buffermanager::GetDetail(int blocknum, int blockoffset) {
+    return blocks[blocknum].content + blockoffset;
 }
 
-int buffermanager::WriteBack(int blocknum)
-{
+int buffermanager::WriteBack(int blocknum) {
     //将一个块写回文件
     if (!blocks[blocknum].dirty) return SUCCESS;
-    const char* filename = blocks[blocknum].filename.c_str();
+    const char *filename = blocks[blocknum].filename.c_str();
     fstream File(filename);
-    if (!File)
-    {
-        cout<<"File Open Failure!"<<endl;
+    if (!File) {
+        cout << "File Open Failure!" << endl;
         return FILE_ERROR;
     }
 
-    File.seekp(blocks[blocknum].fileoffset*BLOCKSIZE,ios::beg);
+    File.seekp(blocks[blocknum].fileoffset * BLOCKSIZE, ios::beg);
 
-    File<<blocks[blocknum].content;
+    File << blocks[blocknum].content;
     File.close();
     //清除这个块的相关信息
     blocks[blocknum].ClearBlock();
     return SUCCESS;
 }
 
-int buffermanager::FindBlockinBuffer(string fileName, int offset)
-{
+int buffermanager::FindBlockinBuffer(string fileName, int offset) {
     //如果这个块已经在buffer中，返回这个块在buffer中的number
-    for (int i = 0; i< BLOCKNUMBER; i++)
-        if (blocks[i].used&& blocks[i].filename==fileName && blocks[i].fileoffset==offset)
-        {
+    for (int i = 0; i < BLOCKNUMBER; i++)
+        if (blocks[i].used && blocks[i].filename == fileName && blocks[i].fileoffset == offset) {
             UpdateBlock(i);
             return i;
         }
 
     //如果不在，就先找buffer中一个空的块，然后将这个块从文件里写入buffer
     int blocknum = GetAnEmptyBlock();
-    if (WriteIn(fileName,offset,blocknum)==NOT_ENOUGH) flag = NO_SUCH_BLOCK;
+    if (WriteIn(fileName, offset, blocknum) == NOT_ENOUGH) flag = NO_SUCH_BLOCK;
     return blocknum;
 }
 
-int buffermanager::WriteIn(string fileName, int offset, int blocknum)
-{
+int buffermanager::WriteIn(string fileName, int offset, int blocknum) {
     //将这个块的内容从文件中写入
-    const char* filename = fileName.c_str();
-    ifstream File(filename, std::ios::in|ios::app);
-    if (!File.is_open())
-    {
-        cout<<"File Open Failure!"<<endl;
+    const char *filename = fileName.c_str();
+    ifstream File(filename, std::ios::in | ios::app);
+    if (!File.is_open()) {
+        cout << "File Open Failure!" << endl;
         return FILE_ERROR;
     }
     File.clear();
@@ -108,92 +97,89 @@ int buffermanager::WriteIn(string fileName, int offset, int blocknum)
     File.seekg(0, ios::end);
     l = (int)(File.tellg()) - l;//记录文件长度
     File.seekg(0, ios::beg);
-    if (l<offset*BLOCKSIZE) return NOT_ENOUGH;
+    if (l < offset * BLOCKSIZE) return NOT_ENOUGH;
     File.clear();
 
-    File.seekg(offset*BLOCKSIZE, ios::beg);
+    File.seekg(offset * BLOCKSIZE, ios::beg);
 
     int i;
-    for (i = 0; i<BLOCKSIZE&&!File.eof(); i++)
-    {
+    for (i = 0; i < BLOCKSIZE && !File.eof(); i++) {
         File.get(blocks[blocknum].content[i]);
     }
 
     File.close();
-    if (i<BLOCKSIZE) WriteBack(blocknum);
+//    if (i<BLOCKSIZE) WriteBack(blocknum);
     //set这个块的相关信息，包括对应文件和对应文件中的offset、最近修改时间等等
 
     return SUCCESS;
 }
 
-int buffermanager::GetAnEmptyBlock()
-{
+int buffermanager::GetAnEmptyBlock() {
     //如果buffer中有空的快，直接返回
     for (int i = 0; i < BLOCKNUMBER; i++)
-        if (blocks[i].used==false)
+        if (blocks[i].used == false)
             return i;
 
     //按照LRU找一个最近没用过且没有被固定的块
     int LRU = 0;
-    for (int i = 1; i< BLOCKNUMBER; i++)
-        if (!blocks[i].pin && blocks[i].Recenttime<blocks[LRU].Recenttime)
+    for (int i = 1; i < BLOCKNUMBER; i++)
+        if (!blocks[i].pin && blocks[i].Recenttime < blocks[LRU].Recenttime)
             LRU = i;
     //如果这个块是dirty的，那么要先写回文件中
     if (blocks[LRU].dirty) WriteBack(LRU);
     return LRU;
 }
 
-int Space(char* ch, int size)
-{
+int Space(char *ch, int size) {
     int pos = 0;
-    while (*ch)
-    {
+    while (*ch) {
         int i = 0;
-        while (*ch&&(*ch==' '||*ch == 10)) {
+        while (*ch && (*ch == ' ' || *ch == 10)) {
             ch++;
             i++;
         }
 
-        if (i-2>=size) return pos;
+        if (i - 2 >= size) return pos;
 
         if (!*ch) break;
-        pos = pos+i;
+        pos = pos + i;
 
-        while (*ch&&*ch!=' '&&*ch != 10){
+        while (*ch && *ch != ' ' && *ch != 10) {
             ch++;
             pos++;
         }
     }
-    if (pos+size<BLOCKSIZE-2) return pos; else return -1;
+    if (pos + size < BLOCKSIZE - 2) return pos; else return -1;
 }
 
-void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blocknum, int * blockoffset)
-{
+void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int *blocknum, int *blockoffset) {
     //如果buffer里有可以用的块，直接用
-    for (int i = 0; i< BLOCKNUMBER; i++){
-        if (blocks[i].used&& blocks[i].filename==fileName)
-            if ((*blockoffset=Space(blocks[i].content,size)+1)!=0)
-        {
-            UpdateBlock(i);
-            blocks[*blocknum].usedsize+=size;
-            *blocknum = i;
-            return ;
-        }
+    for (int i = 0; i < BLOCKNUMBER; i++) {
+        if (blocks[i].used && blocks[i].filename == fileName)
+            if ((*blockoffset = Space(blocks[i].content, size) + 1) != 0) {
+                UpdateBlock(i);
+                blocks[*blocknum].usedsize += size;
+                *blocknum = i;
+                return;
+            }
     }
 
     int i = 0;
-    while(1)
-    {
-        *blocknum = FindBlockinBuffer(fileName,i);
-        if (flag==NO_SUCH_BLOCK){
-            fstream File(fileName,ios::app);
+    while (1) {
+        *blocknum = FindBlockinBuffer(fileName, i);
+        if (flag == NO_SUCH_BLOCK) {
+            fstream File(fileName, ios::app);
             File.seekg(0, ios::end);
-            File<<" ";
+            File << " ";
             File.close();
             *blockoffset = 0;
             return;
         }
-        if ((*blockoffset = Space(blocks[*blocknum].content,size)+1)!=0) return;
+        if (!blocks[*blocknum].content[0]) {
+            *blockoffset = Space(blocks[*blocknum].content, size);
+            return;
+        }
+        if ((*blockoffset = Space(blocks[*blocknum].content, size) + 1) != 0) return;
         i++;
     }
 
@@ -239,84 +225,71 @@ void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blockn
 
 }
 
-void buffermanager::DirtBlock(int blocknum)
-{
+void buffermanager::DirtBlock(int blocknum) {
     blocks[blocknum].dirty = true;
 }
 
-void buffermanager::PinBlock(int blocknum)
-{
+void buffermanager::PinBlock(int blocknum) {
     blocks[blocknum].pin = true;
 }
 
-void buffermanager::UpdateBlock(int blocknum)
-{
+void buffermanager::UpdateBlock(int blocknum) {
     blocks[blocknum].Recenttime = time(NULL);
 }
 
-int buffermanager::DeleteFile(string filename)
-{
+int buffermanager::DeleteFile(string filename) {
     DeleteBlock(filename);
-    if(remove(filename.c_str())==0)
-        {
-            cout<<"Delete success!"<<endl;
-            return SUCCESS;
-        }
-        else
-        {
-            cout<<"Delete fail!"<<endl;
-            return FILE_ERROR;
-        }
+    if (remove(filename.c_str()) == 0) {
+        cout << "Delete success!" << endl;
+        return SUCCESS;
+    } else {
+        cout << "Delete fail!" << endl;
+        return FILE_ERROR;
+    }
 }
 
-bool buffermanager::FindFile(string filename)
-{
+bool buffermanager::FindFile(string filename) {
     fstream File(filename);
-    if (!File.is_open())
-    {
+    if (!File.is_open()) {
         return false;
     }
     File.close();
     return true;
 }
 
-void buffermanager::DeleteBlock(string filename)
-{
-    for (int i =0; i< BLOCKNUMBER; i++)
-        if (blocks[i].filename==filename)
+void buffermanager::DeleteBlock(string filename) {
+    for (int i = 0; i < BLOCKNUMBER; i++)
+        if (blocks[i].filename == filename)
             blocks[i].ClearBlock();
 }
 
-int buffermanager::Insert(int blocknum, int offset, char* data)
-{
-    if (strlen(data)+blocks[blocknum].usedsize>BLOCKSIZE)
-    {
+int buffermanager::Insert(int blocknum, int offset, char *data) {
+    if (strlen(data) + blocks[blocknum].usedsize > BLOCKSIZE) {
         //cout<<strlen(data)<<" "<<blocks[blocknum].usedsize<<endl;
-        cout<<"TOO LARGE TO FIT IN!"<<endl;
+        cout << "TOO LARGE TO FIT IN!" << endl;
         return BLOCK_INSERTION_FAILURE;
     }
 
     int i = offset;
     char *ch = data;
-    while (*ch)
-    {
+    while (*ch) {
         blocks[blocknum].content[i++] = *ch;
         ch++;
     }
 
+    DirtBlock(blocknum);
     return SUCCESS;
 }
 
-int buffermanager::Delete(int blocknum, int blockoffset, int size)
-{
-    if (blockoffset+size>BLOCKSIZE)
-    {
-        cout<<"TOO LARGE TO DELETE"<<endl;
+int buffermanager::Delete(int blocknum, int blockoffset, int size) {
+    if (blockoffset + size > BLOCKSIZE) {
+        cout << "TOO LARGE TO DELETE" << endl;
         return BLOCK_DELETION_FAILURE;
     }
 
-    for (int i =blockoffset; i<blockoffset+size;i++)
+    for (int i = blockoffset; i < blockoffset + size; i++)
         blocks[blocknum].content[i] = '\0';
 
+    DirtBlock(blocknum);
     return SUCCESS;
 }
