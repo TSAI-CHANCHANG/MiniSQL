@@ -149,6 +149,24 @@ int Delete(int blocknum, int blockoffset, int size);
 
 *   使用空格填充原始数据
 
+# GetPosition
+
+```
+int GetPosition(int blocknum);
+```
+
+## int blocknum
+
+*   buffer中的块标号
+
+## returned value
+
+*   这个块是所属文件中的第几块
+
+## Description
+
+*   定位用
+
 # Class Block
 
 ```

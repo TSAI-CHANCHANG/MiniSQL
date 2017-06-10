@@ -1,14 +1,14 @@
 #ifndef BUFFERMANAGER_H
 #define BUFFERMANAGER_H
-
 #include "defination.h"
 #include<string>
 #include<time.h>
 
 
+
 using namespace std;
 
-class block {
+class block{
 private:
     bool dirty;
     bool pin;
@@ -19,7 +19,7 @@ public:
     string filename;//对应文件名
     int fileoffset;//对应在文件中的第几个block
     int usedsize;//已经使用的size
-    char content[BLOCKSIZE + 1];
+    char content[BLOCKSIZE+1];
 
 
     void ClearBlock();
@@ -34,7 +34,7 @@ public:
     friend class buffermanager;
 };
 
-class buffermanager {
+class buffermanager{
 public:
     buffermanager();
     ~buffermanager();
@@ -43,10 +43,10 @@ public:
     //在buffer中找一个块（没有就从文件中放到buffer里，返回这是第几个buffer block）
     //约定三种文件后缀，table是.tab，index是.idx，catlog是.cat
 
-    char *GetDetail(int blocknum, int blockoffset);
+    char* GetDetail(int blocknum, int blockoffset);
     //给出blocknum和blockoffset，得到对应的指针
 
-    void FindSuitBlockinBuffer(string fileName, int size, int *blocknum, int *blockoffset);
+    void FindSuitBlockinBuffer(string fileName, int size, int* blocknum, int * blockoffset);
     //给出文件名和需要插入的数据大小，返回一个足够在末端插入这个数据量的块和可以插入的offset
     //返回值是后面两个指针
 
@@ -62,11 +62,13 @@ public:
     void PinBlock(int blocknum);
     //将一个block固定住，设为不能修改
 
-    int Insert(int blocknum, int offset, char *data);
+    int Insert(int blocknum, int offset, char* data);
     //在编号为blocknum的块最后插入data
 
     int Delete(int blocknum, int blockoffset, int size);
     //从编号为blocknum的块里第offset的位置起删掉大小为size的数据
+
+    int GetPosition(int blocknum);
 
 private:
     int WriteBack(int blocknum);
