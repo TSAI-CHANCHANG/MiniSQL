@@ -11,12 +11,12 @@ using namespace std;
 int main(void) {
     catalogmanager catalogMgr;
     BPLUSTREE BT(BLOCKSIZE);
-//    cout << catalogMgr.CreateTable("testTable1", "t_id int,t_name   char(35) \n  unique ,   primary     key(ID)", BT)
+//    cout << catalogMgr.CreateTable("testTable1", "t_id int,t_name   char(35) \n  unique ,   primary     key(t_id)", BT)
 //         << endl;
     RecordManager recordManager("testTable1");
-//    recordManager.insertRecord("101, 'zxd'");
-    string whereClause1 = "a < 12 and b > 4\n and c = 'abc'";
-    recordManager.parseWhere(whereClause1);
+    recordManager.insertRecord("101, 'zxd'");
+//    string whereClause1 = "a < 12 and b > 4\n and c = 'abc'";
+//    recordManager.parseWhere(whereClause1);
 
     return 0;
 }

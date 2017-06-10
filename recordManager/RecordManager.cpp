@@ -30,6 +30,7 @@ bool RecordManager::insertRecord(string rawValues) {
 #if DEBUG_IT
     cout << "Insert record:" << endl;
     cout << resultRecord;
+    cout << "TableName: " << tableName << endl;
 #endif
 
     buffermanager bufferMgr;
@@ -38,7 +39,10 @@ bool RecordManager::insertRecord(string rawValues) {
     int blockOffset;
 
     // TODO: resultRecord的最终形式的确定，换行？空格？
-    bufferMgr.FindSuitBlockinBuffer(tableName, resultRecord.length(), &blockNum, &blockOffset);
+    bufferMgr.FindSuitBlockinBuffer(tableName + ".rec", resultRecord.length(), &blockNum, &blockOffset);
+#if DEBUG_IT
+    cout << "blockNum: " << blockNum << " offset: " << blockOffset << endl;
+#endif
     bufferMgr.Insert(blockNum, blockOffset, (char *)resultRecord.c_str()); // TODO: 返回值？成功失败的标志？
 
     // TODO: update index, after specify index Manager interface
@@ -172,7 +176,7 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
 
                 string tmp;
                 switch (attrIter->type) {
-                    case int_t:
+                    case int_t: {
                         int tmp_i;
                         if (valueStrIn >> tmp_i && !(valueStrIn >> tmp)) {
                             Restrict *intRestrict = new IntRestrict(attrName, relationOp, tmp_i);
@@ -181,8 +185,8 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
                             cerr << "Error: " << " type not match!" << endl;
                         }
                         break;
-
-                    case float_t:
+                    }
+                    case float_t: {
                         float tmp_f;
                         if (valueStrIn >> tmp_f && !(valueStrIn >> tmp)) {
                             Restrict *floatRestrict = new FloatRestrict(attrName, relationOp, tmp_f);
@@ -192,7 +196,8 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
                         }
                         break;
 
-                    case char_t:
+                    }
+                    case char_t: {
                         string tmp_s;
                         if (valueStrIn >> tmp_s) {
                             if (*tmp_s.begin() == '\'' && *(tmp_s.end() - 1) == '\'') {
@@ -204,6 +209,7 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
                             cerr << "Error: " << " type not match!" << endl;
                         }
                         break;
+                    }
                     default:
                         break;
                 }
@@ -332,9 +338,9 @@ vector<Range *> RecordManager::generateRange(vector<Restrict *> restricts) {
     return ranges;
 }
 
-bool RecordManager::updateRange(Range *range, const Restrict *restrict) {
+bool RecordManager::updateRange(Range *range, Restrict *restrict) {
     switch (restrict->type) {
-        case int_t:
+        case int_t: {
             IntRestrict *intRestrict = static_cast<IntRestrict *>(restrict);
             IntRange *intRange = static_cast<IntRange *>(range);
             switch (restrict->op) {
@@ -404,7 +410,8 @@ bool RecordManager::updateRange(Range *range, const Restrict *restrict) {
                     break;
             }
             break;
-        case float_t: // TODO: need to refactor
+        }
+        case float_t: { // TODO: need to refactor
             FloatRestrict *floatRestrict = static_cast<FloatRestrict *>(restrict);
             FloatRange *floatRange = static_cast<FloatRange *>(range);
             switch (restrict->op) {
@@ -475,7 +482,8 @@ bool RecordManager::updateRange(Range *range, const Restrict *restrict) {
                     break;
             }
             break;
-        case char_t:
+        }
+        case char_t: {
             StringRestrict *stringRestrict = static_cast<StringRestrict *>(restrict);
             StringRange *stringRange = static_cast<StringRange *>(range);
             switch (restrict->op) {
@@ -503,6 +511,7 @@ bool RecordManager::updateRange(Range *range, const Restrict *restrict) {
                     break;
             }
             break;
+        }
         default:
             break;
     }

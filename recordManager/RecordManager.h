@@ -129,7 +129,7 @@ public:
 
     vector<Restrict *> parseWhere(string rawWhereClause = nullptr); // TODO: be private
     vector<Range *> generateRange(vector<Restrict *> restricts); // TODO: be private
-    bool updateRange(Range *range, const Restrict *restrict); // TODO: be private
+    bool updateRange(Range *range, Restrict *restrict); // TODO: be private
     bool insertRecord(string rawValues);
     bool selectRecords(vector<string> attributes, string rawWhereClause);
     bool deleteRecords(string rawWhereClause);
