@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 #include <limits>
-#include "../record+catalog+buffer/table.h"
+#include "../index+catalog+buffer/table.h"
 
 using namespace std;
 

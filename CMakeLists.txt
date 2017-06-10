@@ -9,13 +9,13 @@ set(SOURCE_FILES
         recordManager/RecordManager.h
 
 #        record+catalog+buffer/main.cpp
-        record+catalog+buffer/table.h
-        record+catalog+buffer/catalogmanager.h
-        record+catalog+buffer/catalogmanager.cpp
-        record+catalog+buffer/buffermanager.h
-        record+catalog+buffer/buffermanager.cpp
-        record+catalog+buffer/defination.h
-        record+catalog+buffer/IndexManager.cpp
-        record+catalog+buffer/IndexManager.h
+        index+catalog+buffer/table.h
+        index+catalog+buffer/catalogmanager.h
+        index+catalog+buffer/catalogmanager.cpp
+        index+catalog+buffer/buffermanager.h
+        index+catalog+buffer/buffermanager.cpp
+        index+catalog+buffer/defination.h
+        index+catalog+buffer/IndexManager.cpp
+        index+catalog+buffer/IndexManager.h
         )
 add_executable(MiniSQL ${SOURCE_FILES})

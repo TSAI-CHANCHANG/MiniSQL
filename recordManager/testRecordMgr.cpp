@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "RecordManager.h"
-#include "../record+catalog+buffer/catalogmanager.h"
+#include "../index+catalog+buffer/catalogmanager.h"
 
 using namespace std;
 

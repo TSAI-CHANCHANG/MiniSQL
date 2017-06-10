@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <regex>
 #include "RecordManager.h"
-#include "../record+catalog+buffer/catalogmanager.h"
-#include "../record+catalog+buffer/buffermanager.h"
-#include "../record+catalog+buffer/table.h"
+#include "../index+catalog+buffer/catalogmanager.h"
+#include "../index+catalog+buffer/buffermanager.h"
+#include "../index+catalog+buffer/table.h"
 
 #define DEBUG_IT true
 
