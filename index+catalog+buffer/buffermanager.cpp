@@ -67,15 +67,21 @@ int buffermanager::WriteBack(int blocknum)
 
     File.seekp(blocks[blocknum].fileoffset*BLOCKSIZE,ios::beg);
 
+    //cout<<File.tellp()<<endl;
     File<<blocks[blocknum].content;
+    //cout<<strlen(blocks[blocknum].content)<<endl;
+    //cout<<File.tellp()<<endl;
     File.close();
     //清除这个块的相关信息
+
     blocks[blocknum].ClearBlock();
+
     return SUCCESS;
 }
 
 int buffermanager::FindBlockinBuffer(string fileName, int offset)
 {
+    flag = 0;
     //如果这个块已经在buffer中，返回这个块在buffer中的number
     for (int i = 0; i< BLOCKNUMBER; i++)
         if (blocks[i].used&& blocks[i].filename==fileName && blocks[i].fileoffset==offset)
@@ -100,15 +106,18 @@ int buffermanager::WriteIn(string fileName, int offset, int blocknum)
         cout<<"File Open Failure!"<<endl;
         return FILE_ERROR;
     }
-    File.clear();
 
     blocks[blocknum].SetBlock(fileName, offset);
 
-    int l = File.tellg();
-    File.seekg(0, ios::end);
-    l = File.tellg()-l;//记录文件长度
     File.seekg(0, ios::beg);
-    if (l<offset*BLOCKSIZE) return NOT_ENOUGH;
+    int l = (int)File.tellg();
+    File.seekg(0, ios::end);
+    l = (int)File.tellg()-l;//记录文件长度
+    if (l<offset*BLOCKSIZE)
+    {
+        File.close();
+        return NOT_ENOUGH;
+    }
     File.clear();
 
     File.seekg(offset*BLOCKSIZE, ios::beg);
@@ -120,7 +129,7 @@ int buffermanager::WriteIn(string fileName, int offset, int blocknum)
     }
 
     File.close();
-    if (i<BLOCKSIZE) WriteBack(blocknum);
+    //if (i<BLOCKSIZE) WriteBack(blocknum);
     //set这个块的相关信息，包括对应文件和对应文件中的offset、最近修改时间等等
 
     return SUCCESS;
@@ -139,7 +148,8 @@ int buffermanager::GetAnEmptyBlock()
         if (!blocks[i].pin && blocks[i].Recenttime<blocks[LRU].Recenttime)
             LRU = i;
     //如果这个块是dirty的，那么要先写回文件中
-    if (blocks[LRU].dirty) WriteBack(LRU);
+    WriteBack(LRU);
+    if (blocks[LRU].usedsize!=0) blocks[LRU].ClearBlock();
     return LRU;
 }
 
@@ -148,13 +158,14 @@ int Space(char* ch, int size)
     int pos = 0;
     while (*ch)
     {
+    	//���û�취�ˣ���������Ҳ�ܾ����ģ�������ͬ�ı���������һ���� 
         int i = 0;
         while (*ch&&(*ch==' '||*ch == 10)) {
             ch++;
             i++;
         }
 
-        if (i-2>=size) return pos;
+        if (i-2>=size*2) return pos;
 
         if (!*ch) break;
         pos = pos+i;
@@ -164,7 +175,7 @@ int Space(char* ch, int size)
             pos++;
         }
     }
-    if (pos+size<BLOCKSIZE-2) return pos; else return -1;
+    if (pos+size*3<BLOCKSIZE-100) return pos; else return -1;
 }
 
 void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blocknum, int * blockoffset)
@@ -174,27 +185,29 @@ void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blockn
         if (blocks[i].used&& blocks[i].filename==fileName)
             if ((*blockoffset=Space(blocks[i].content,size)+1)!=0)
         {
+                //cout<<*blockoffset<<endl;
             UpdateBlock(i);
-            blocks[*blocknum].usedsize+=size;
+            blocks[i].usedsize+=size;
             *blocknum = i;
             return ;
-        }
+            }
     }
 
     int i = 0;
     while(1)
     {
         *blocknum = FindBlockinBuffer(fileName,i);
+        //cout<<blocks[*blocknum].content<<endl;
         if (flag==NO_SUCH_BLOCK){
-            fstream File(fileName,ios::app);
-            File.seekg(0, ios::end);
+            ofstream File(fileName.c_str(),ios::app);
+            File.seekp(i*BLOCKSIZE, ios::beg);
             File<<" ";
             File.close();
             *blockoffset = 0;
             return;
         }
         if (!blocks[*blocknum].content[0]) {
-            *blockoffset = Space(blocks[*blocknum].content,size);
+            *blockoffset = 0;
             return;
         }
         if ((*blockoffset = Space(blocks[*blocknum].content,size)+1)!=0) return;
@@ -275,7 +288,7 @@ int buffermanager::DeleteFile(string filename)
 
 bool buffermanager::FindFile(string filename)
 {
-    fstream File(filename);
+    fstream File(filename.c_str());
     if (!File.is_open())
     {
         return false;
@@ -308,6 +321,7 @@ int buffermanager::Insert(int blocknum, int offset, char* data)
         ch++;
     }
 
+    DirtBlock(blocknum);
     return SUCCESS;
 }
 
@@ -322,6 +336,7 @@ int buffermanager::Delete(int blocknum, int blockoffset, int size)
     for (int i =blockoffset; i<blockoffset+size;i++)
         blocks[blocknum].content[i] = '\0';
 
+    DirtBlock(blocknum);
     return SUCCESS;
 }
 
