@@ -157,8 +157,7 @@ int Space(char* ch, int size)
 {
     int pos = 0;
     while (*ch)
-    {
-    	//真的没办法了！！！！我也很绝望的！！！不同的编译器还不一样！ 
+    { 
         int i = 0;
         while (*ch&&(*ch==' '||*ch == 10)) {
             ch++;
@@ -334,7 +333,9 @@ int buffermanager::Delete(int blocknum, int blockoffset, int size)
     }
 
     for (int i =blockoffset; i<blockoffset+size;i++)
-        blocks[blocknum].content[i] = '\0';
+        blocks[blocknum].content[i] = ' ';
+    
+    //cout<<blocks[blocknum].content<<endl;
 
     DirtBlock(blocknum);
     return SUCCESS;
