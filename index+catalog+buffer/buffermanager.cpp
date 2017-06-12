@@ -164,7 +164,7 @@ int Space(char* ch, int size)
             i++;
         }
 
-        if (i-2>=size*2) return pos;
+        if (i>=size*2) return pos;
 
         if (!*ch) break;
         pos = pos+i;
@@ -174,7 +174,7 @@ int Space(char* ch, int size)
             pos++;
         }
     }
-    if (pos+size*3<BLOCKSIZE-100) return pos; else return -1;
+    if (pos+size*3<BLOCKSIZE-500) return pos; else return -1;
 }
 
 void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blocknum, int * blockoffset)
@@ -333,7 +333,7 @@ int buffermanager::Delete(int blocknum, int blockoffset, int size)
     }
 
     for (int i =blockoffset; i<blockoffset+size;i++)
-        blocks[blocknum].content[i] = ' ';
+        if (blocks[blocknum].content[i]!='\n') blocks[blocknum].content[i] = ' ';
     
     //cout<<blocks[blocknum].content<<endl;
 
