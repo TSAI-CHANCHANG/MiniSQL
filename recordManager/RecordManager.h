@@ -38,6 +38,11 @@ static map<RelationOp, string> relationOps{
         {eq,  "="}
 };
 
+struct RawData {
+    DataType type;
+    string value;
+};
+
 struct Restrict {
     Restrict() {}
 
@@ -73,6 +78,7 @@ struct StringRestrict : Restrict {
 
 struct Range {
     Range() {}
+
     Range(bool valid, DataType type, string attrName) :
             valid(valid), type(type), attrName(attrName) {}
 
@@ -122,7 +128,7 @@ private:
     string tableName;
     Table tableInfo;
 
-    string generateInsertValues(string rawValues);
+    string generateInsertValues(string rawValues, vector<RawData> &indexInfos);
 
 public:
     RecordManager(const string tableName) : tableName(tableName) {}

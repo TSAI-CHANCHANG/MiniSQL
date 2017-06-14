@@ -26,7 +26,9 @@ bool RecordManager::insertRecord(string rawValues) {
         cerr << "Error: " << "No such table named: " << tableName << endl;
     }
 
-    string resultRecord = generateInsertValues(rawValues);
+    vector<RawData> indexInfos;
+
+    string resultRecord = generateInsertValues(rawValues, indexInfos); // rawData used for get index info
 #if DEBUG_IT
     cout << "Insert record:" << endl;
     cout << resultRecord;
@@ -43,17 +45,22 @@ bool RecordManager::insertRecord(string rawValues) {
 #if DEBUG_IT
     cout << "blockNum: " << blockNum << " offset: " << blockOffset << endl;
 #endif
-    bufferMgr.Insert(blockNum, blockOffset, (char *)resultRecord.c_str()); // TODO: 返回值？成功失败的标志？
+    if (resultRecord != "") {
+        bufferMgr.Insert(blockNum, blockOffset, (char *)resultRecord.c_str()); // TODO: 返回值？成功失败的标志？
+    }
 
 #if DEBUG_IT
 #endif
 
-    // TODO: update index, after specify index Manager interface
+    if (resultRecord != "") {
+        // TODO: update index, after specify index Manager interface
+//    BPLUSTREE bplustree(blockNum); // ??? blockNum是啥？
+    }
 
     return true;
 }
 
-string RecordManager::generateInsertValues(string rawValues) {
+string RecordManager::generateInsertValues(string rawValues, vector<RawData> &indexInfos) {
     string resultRecord;
     int tmp_i;
     float tmp_f;
@@ -106,7 +113,15 @@ string RecordManager::generateInsertValues(string rawValues) {
         }
 
         if ((*iter).unique || (*iter).primary) {
-//            checkUnique() TODO: after done select
+//            checkUnique() TODO: check unique: after done select
+        }
+
+        if ((*iter).indexname != "noindex") {
+            // TODO: indexname 如何使用
+            RawData rawData;
+            rawData.type = static_cast<DataType>((*iter).type);
+            rawData.value = valueTerm;
+            indexInfos.push_back(rawData);
         }
     }
     if (strIn.bad()) {
