@@ -16,6 +16,8 @@
 
 using namespace std;
 
+extern block blocks[BLOCKNUMBER];
+
 bool RecordManager::insertRecord(string rawValues) {
     catalogmanager catalogMgr;
     tableInfo = catalogMgr.GetTable(tableName);
@@ -148,9 +150,34 @@ bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClau
 bool RecordManager::deleteRecords(string rawWhereClause = "") {
     if (rawWhereClause.empty()) {
         // TODO: simple fetch all
+        buffermanager bufferMgr;
+        int blockNum = bufferMgr.FindBlockinBuffer(tableName + ".rec", 0); // TODO: fetch all block, connect with catalog
+#if DEBUG_IT
+        cout << blocks[blockNum].content;
+#endif
+        char *pos = blocks[blockNum].content;
+
+        // use fill blank to delete, consider extract it into a standalone function
+        while ((*pos) != '\0') {
+            while ((*pos) != '\n') {
+                (*pos) = ' ';
+                pos++;
+            }
+            pos++;
+        }
+
+#if DEBUG_IT
+        cout << "After Delete:" << endl;
+        cout << blocks[blockNum].content;
+#endif
     } else {
         vector<Restrict *> restricts = parseWhere(rawWhereClause); // TODO: 记得delete掉
-
+        vector<Range *> ranges = generateRange(restricts);
+        for (Range *range : ranges) {
+            vector<Attribute>::iterator attrIter = find_if(tableInfo.Attr.begin(), tableInfo.Attr.end(), [range](Attribute attr) {
+                return (attr.attrname == range->attrName && attr.indexname != "noindex");
+            });
+        }
     }
     return true;
 }
@@ -255,7 +282,7 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
     return restricts;
 }
 
-vector<Range *> RecordManager::generateRange(vector<Restrict *> restricts) {
+vector<Range *> RecordManager::generateRange(const vector<Restrict *> &restricts) {
     vector<Range *> ranges;
     for (Restrict *restrict : restricts) {
         string attrName = restrict->attrName;

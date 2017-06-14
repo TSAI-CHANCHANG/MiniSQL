@@ -134,7 +134,7 @@ public:
     RecordManager(const string tableName) : tableName(tableName) {}
 
     vector<Restrict *> parseWhere(string rawWhereClause = nullptr); // TODO: be private
-    vector<Range *> generateRange(vector<Restrict *> restricts); // TODO: be private
+    vector<Range *> generateRange(const vector<Restrict *> &restricts); // TODO: be private
     bool updateRange(Range *range, Restrict *restrict); // TODO: be private
     bool insertRecord(string rawValues);
     bool selectRecords(vector<string> attributes, string rawWhereClause);
