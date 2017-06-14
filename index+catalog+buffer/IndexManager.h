@@ -1,9 +1,10 @@
 #pragma once
+#pragma once
 /*	Need block_size when construct.
 CreateIndex:
-	Need a file have key and a integer(address of offset) every line.
-	Transfer the name of attribute ,file an type to me.
-	
+Need a file have key and a integer(address of offset) every line.
+Transfer the name of attribute ,file an type to me.
+
 */
 #include <map>
 #include <vector>
@@ -32,45 +33,45 @@ using namespace std;
 int GetDegree(int block_size, int type);
 
 struct INTNODE {
-    vector<int> key;
-    vector<INTNODE *> pointer;
-    vector<int> block, offset;
-    INTNODE *father, *prev, *next;
+	vector<int> key;
+	vector<INTNODE *> pointer;
+	vector<int> block, offset;
+	INTNODE *father, *prev, *next;
 };
 struct FLOATNODE {
-    vector<float> key;
-    vector<FLOATNODE *> pointer;
-    vector<int> block, offset;
-    FLOATNODE *father, *prev, *next;
+	vector<float> key;
+	vector<FLOATNODE *> pointer;
+	vector<int> block, offset;
+	FLOATNODE *father, *prev, *next;
 };
 struct CHARNODE {
-    vector<string> key;
-    vector<CHARNODE *> pointer;
-    vector<int> block, offset;
-    CHARNODE *father, *prev, *next;
+	vector<string> key;
+	vector<CHARNODE *> pointer;
+	vector<int> block, offset;
+	CHARNODE *father, *prev, *next;
 };
 
 
 class BPLUSTREE {
 public:
-    BPLUSTREE(int block_size);
-    ~BPLUSTREE();
+	BPLUSTREE(int block_size);
+	~BPLUSTREE();
 
-    int CreateIndex(string *file_name, int type);
-    int DropIndex(string *file_name, int type);
-    int Insert(int type, string *file_name, string *key, int block, int offset);
-    int Delete(int type, string *file_name, string *lbound, string *rbound, int lopen, int ropen);
-    int Find(int type, string *file_name, string *lbound, string *rbound, int lopen, int ropen);
-    int DeleteNode(int type, string *file_name, string *skey);
+	int CreateIndex(string *file_name, int type);
+	int DropIndex(string *file_name, int type);
+	int Insert(int type, string *file_name, string *key, int block, int offset);
+	int Delete(int type, string *file_name, vector <string> &deleted);
+	int Find(int type, string *file_name, string *lbound, string *rbound, int lopen, int ropen);
+	int DeleteNode(int type, string *file_name, string *skey);
 
 
 private:
-    int block_size;
-    map<string, INTNODE *> int_map;
-    map<string, FLOATNODE *> float_map;
-    map<string, CHARNODE *> char_map;
-    int AddNode(int type, string *file_name, string *key, int block, int offset);
-    int CreateTree(int type, string *file_name);
-    //int DeleteNode(int type, string *file_name, string *skey);
+	int block_size;
+	map<string, INTNODE *> int_map;
+	map<string, FLOATNODE *> float_map;
+	map<string, CHARNODE *> char_map;
+	int AddNode(int type, string *file_name, string *key, int block, int offset);
+	int CreateTree(int type, string *file_name);
+	//int DeleteNode(int type, string *file_name, string *skey);
 };
 

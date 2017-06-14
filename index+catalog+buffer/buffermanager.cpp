@@ -5,6 +5,7 @@
 
 #include"defination.h"
 #include "buffermanager.h"
+#include "catalogmanager.h"
 
 block blocks[BLOCKNUMBER];//预计有10个buffer中的block
 
@@ -148,8 +149,7 @@ int buffermanager::GetAnEmptyBlock()
         if (!blocks[i].pin && blocks[i].Recenttime<blocks[LRU].Recenttime)
             LRU = i;
     //如果这个块是dirty的，那么要先写回文件中
-    WriteBack(LRU);
-    if (blocks[LRU].usedsize!=0) blocks[LRU].ClearBlock();
+    if (blocks[LRU].dirty) WriteBack(LRU); else blocks[LRU].ClearBlock();
     return LRU;
 }
 
@@ -307,7 +307,6 @@ int buffermanager::Insert(int blocknum, int offset, char* data)
 {
     if (strlen(data)+blocks[blocknum].usedsize>BLOCKSIZE)
     {
-        //cout<<strlen(data)<<" "<<blocks[blocknum].usedsize<<endl;
         cout<<"TOO LARGE TO FIT IN!"<<endl;
         return BLOCK_INSERTION_FAILURE;
     }
