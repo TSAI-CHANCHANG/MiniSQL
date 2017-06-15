@@ -147,7 +147,7 @@ bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClau
     return true;
 }
 
-bool RecordManager::deleteRecords(string rawWhereClause = "") {
+bool RecordManager::deleteRecords(string rawWhereClause = "", BPLUSTREE &bPlusTree) {
     if (rawWhereClause.empty()) {
         // TODO: simple fetch all
         buffermanager bufferMgr;
@@ -177,6 +177,28 @@ bool RecordManager::deleteRecords(string rawWhereClause = "") {
             vector<Attribute>::iterator attrIter = find_if(tableInfo.Attr.begin(), tableInfo.Attr.end(), [range](Attribute attr) {
                 return (attr.attrname == range->attrName && attr.indexname != "noindex");
             });
+            if (attrIter != tableInfo.Attr.end()) {
+                // find in index
+                switch (range->type) {
+                    case int_t: {
+                        IntRange *intRange = static_cast<IntRange *>(range);
+                        // TODO: parameter adjustment, and min, max include specify
+                        bPlusTree.Find(range->type, &tableName, to_string(intRange->minValue), to_string(intRange->maxValue), intRange->includeMin, intRange->includeMax) // TODO: file name 到底是啥？
+                        break;
+                    }
+                    case float_t: {
+                        FloatRange *floatRange = static_cast<FloatRange *>(range);
+                        bPlusTree.Find(range->type, &tableName, to_string(floatRange->minValue), to_string(floatRange->maxValue), floatRange->includeMin, floatRange->includeMax) // TODO: file name 到底是啥？
+                        break;
+                    }
+                    case char_t: {
+                        StringRange *stringRange = static_cast<StringRange *>(range);
+                        // TODO: string 该如何定
+                        break;
+                    }
+
+                }
+            }
         }
     }
     return true;

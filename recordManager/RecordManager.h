@@ -10,6 +10,7 @@
 #include <map>
 #include <limits>
 #include "../index+catalog+buffer/table.h"
+#include "../index+catalog+buffer/IndexManager.h"
 
 using namespace std;
 
@@ -138,7 +139,7 @@ public:
     bool updateRange(Range *range, Restrict *restrict); // TODO: be private
     bool insertRecord(string rawValues);
     bool selectRecords(vector<string> attributes, string rawWhereClause);
-    bool deleteRecords(string rawWhereClause);
+    bool deleteRecords(string rawWhereClause, BPLUSTREE &bPlusTree);
 };
 
 
