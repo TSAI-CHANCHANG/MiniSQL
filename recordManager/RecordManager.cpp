@@ -686,19 +686,11 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) 
 //            }
 #endif
 
-            for (Range *range : ranges) {
-                switch (range->type) {
-                    case int_t: {
-                        IntRange *intRange = static_cast<IntRange *> (range);
-                        int val = stoi(valueOfAttr.find(intRange->attrName)->second);
-
-                        break;
-                    }
-                }
-//                vector<Attribute>::iterator attrIter = find_if(tableInfo.Attr.begin(), tableInfo.Attr.end(), [range](Attribute &attribute) {
-//                    return attribute.attrname == range->attrName;
-//                });
-
+            if (checkInRange(ranges, valueOfAttr)) {
+                // TODO: delete
+#if DEBUG_IT
+                cout << "To be deleted: " << blockNumInFile << " " << blockOffsetInFile << endl;
+#endif
             }
         }
 
@@ -721,14 +713,14 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) 
     }
 }
 
-bool RecordManager::inIntRange(IntRange &range, int val) {
-    if (val < range.minValue || val > range.maxValue)
+bool RecordManager::inIntRange(IntRange *range, int val) {
+    if (val < range->minValue || val > range->maxValue)
         return false;
-    if (val == range.minValue && !(range.includeMin))
+    if (val == range->minValue && !(range->includeMin))
         return false;
-    if (val == range.maxValue && !(range.includeMax))
+    if (val == range->maxValue && !(range->includeMax))
         return false;
-    for (auto iter = range.excludeValues.begin(); iter != range.excludeValues.end(); iter++) {
+    for (auto iter = range->excludeValues.begin(); iter != range->excludeValues.end(); iter++) {
         if (*iter == val)
             return false;
     }
@@ -736,14 +728,14 @@ bool RecordManager::inIntRange(IntRange &range, int val) {
     return true;
 }
 
-bool RecordManager::inFloatRange(FloatRange &range, float val) {
-    if (val < range.minValue || val > range.maxValue)
+bool RecordManager::inFloatRange(FloatRange *range, float val) {
+    if (val < range->minValue || val > range->maxValue)
         return false;
-    if (val == range.minValue && !(range.includeMin))
+    if (val == range->minValue && !(range->includeMin))
         return false;
-    if (val == range.maxValue && !(range.includeMax))
+    if (val == range->maxValue && !(range->includeMax))
         return false;
-    for (auto iter = range.excludeValues.begin(); iter != range.excludeValues.end(); iter++) {
+    for (auto iter = range->excludeValues.begin(); iter != range->excludeValues.end(); iter++) {
         if (*iter == val)
             return false;
     }
@@ -751,14 +743,56 @@ bool RecordManager::inFloatRange(FloatRange &range, float val) {
     return true;
 }
 
-bool RecordManager::inStringRange(StringRange &range, string val) {
-    if (range.value != "" && val != range.value)
+bool RecordManager::inStringRange(StringRange *range, string val) {
+    if (range->value != "" && val != range->value)
         return false;
     else {
-        for (auto iter = range.excludeValues.begin(); iter != range.excludeValues.end(); iter++) {
+        for (auto iter = range->excludeValues.begin(); iter != range->excludeValues.end(); iter++) {
             if (*iter == val)
                 return false;
         }
+    }
+
+    return true;
+}
+
+bool RecordManager::checkInRange(vector<Range *> &ranges, map<string, string> &valueOfAttr) {
+    for (Range *range : ranges) {
+        switch (range->type) {
+            case int_t: {
+                IntRange *intRange = static_cast<IntRange *> (range);
+                int val = stoi(valueOfAttr.find(range->attrName)->second);
+                if (!inIntRange(intRange, val)) {
+                    return false;
+                }
+
+                break;
+            }
+
+            case float_t: {
+                FloatRange *floatRange = static_cast<FloatRange *> (range);
+                float val = stof(valueOfAttr.find(range->attrName)->second);
+                if (!inFloatRange(floatRange, val)) {
+                    return false;
+                }
+                break;
+            }
+
+            case char_t: {
+                StringRange *stringRange = static_cast<StringRange *> (range);
+                string val = valueOfAttr.find(range->attrName)->second;
+                if (!inStringRange(stringRange, val)) {
+                    return false;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+//                vector<Attribute>::iterator attrIter = find_if(tableInfo.Attr.begin(), tableInfo.Attr.end(), [range](Attribute &attribute) {
+//                    return attribute.attrname == range->attrName;
+//                });
+
     }
 
     return true;
