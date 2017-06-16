@@ -6,6 +6,7 @@
 #include <string>
 #include <strstream>
 #include <fstream>
+#include <map>
 #include <algorithm>
 #include <regex>
 #include "RecordManager.h"
@@ -660,11 +661,44 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) 
             int blockNum;
             blockNum = bufferMgr.FindBlockinBuffer(tableInfo.getName() + ".rec", blockNumInFile);
             char *tuplePos = bufferMgr.GetDetail(blockNum, blockOffsetInFile);
+            char *newLineChar = strchr(tuplePos, '\n');
+            int size = newLineChar - tuplePos;
+            istrstream tupleStrIn(tuplePos, size);
+#if 0
+            cout << "Tuple size: " << size << endl;
+#endif
 
 #if DEBUG_IT
-            cout << "Tuple: " << tuplePos << endl;
+//            cout << "Tuple: " << tuplePos << endl;
+//            cout << "Tuple stream: " << tupleStrIn.str();
 #endif
+            map<string, string> valueOfAttr;
+            for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+                string value;
+                tupleStrIn >> value;
+                valueOfAttr.insert(pair<string, string>(attrIter->attrname, value));
+            }
+
+#if DEBUG_IT
+//            cout << "Map Values:" << endl;
+//            for (auto iter = valueOfAttr.begin(); iter != valueOfAttr.end(); iter++) {
+//                cout << iter->first << ": " << iter->second << endl;
+//            }
+#endif
+
             for (Range *range : ranges) {
+                switch (range->type) {
+                    case int_t: {
+                        IntRange *intRange = static_cast<IntRange *> (range);
+                        int val = stoi(valueOfAttr.find(intRange->attrName)->second);
+
+                        break;
+                    }
+                }
+//                vector<Attribute>::iterator attrIter = find_if(tableInfo.Attr.begin(), tableInfo.Attr.end(), [range](Attribute &attribute) {
+//                    return attribute.attrname == range->attrName;
+//                });
+
             }
         }
 
@@ -685,5 +719,48 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) 
             std::cout << "read back from file: " << d << ' ' << n << ' ' << str << '\n';
 #endif
     }
+}
+
+bool RecordManager::inIntRange(IntRange &range, int val) {
+    if (val < range.minValue || val > range.maxValue)
+        return false;
+    if (val == range.minValue && !(range.includeMin))
+        return false;
+    if (val == range.maxValue && !(range.includeMax))
+        return false;
+    for (auto iter = range.excludeValues.begin(); iter != range.excludeValues.end(); iter++) {
+        if (*iter == val)
+            return false;
+    }
+
+    return true;
+}
+
+bool RecordManager::inFloatRange(FloatRange &range, float val) {
+    if (val < range.minValue || val > range.maxValue)
+        return false;
+    if (val == range.minValue && !(range.includeMin))
+        return false;
+    if (val == range.maxValue && !(range.includeMax))
+        return false;
+    for (auto iter = range.excludeValues.begin(); iter != range.excludeValues.end(); iter++) {
+        if (*iter == val)
+            return false;
+    }
+
+    return true;
+}
+
+bool RecordManager::inStringRange(StringRange &range, string val) {
+    if (range.value != "" && val != range.value)
+        return false;
+    else {
+        for (auto iter = range.excludeValues.begin(); iter != range.excludeValues.end(); iter++) {
+            if (*iter == val)
+                return false;
+        }
+    }
+
+    return true;
 }
 

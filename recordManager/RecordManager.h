@@ -136,6 +136,9 @@ private:
 
     string generateInsertValues(string rawValues, vector<IndexInfo> &indexInfos);
     void checkTuple(const string tuplesFile, vector<Range *> ranges);
+    bool inIntRange(IntRange &range, int val);
+    bool inFloatRange(FloatRange &range, float val);
+    bool inStringRange(StringRange &range, string val);
 
 public:
     RecordManager(const string tableName, catalogmanager &catalogMgr, buffermanager &bufferMgr)
