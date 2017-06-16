@@ -369,6 +369,9 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		SQLCurrentPointer = end;
 		return ERROR;
 	}
+	end = SQLSentence.find(';');
+	while (SQLSentence[end] != ')')
+		--end;
 	if (SQLSentence[SQLCurrentPointer + 1] == '(')
 	{
 		cout << "Error! the InsertValues is empty." << endl;
@@ -398,6 +401,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 
 	if (end != -1) //"table" exists
 	{
+		SQLCondition.setInstruction(CREATE_TABLE);
 		//step2.a
 		SQLCurrentPointer = end; // adjust the pointer to 't' in table
 		while (SQLSentence[SQLCurrentPointer] != ' ' && SQLSentence[SQLCurrentPointer] != ';' && SQLCurrentPointer <= SQLSentence.size())
@@ -441,7 +445,9 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 
 		//step5.a
 		SQLCurrentPointer = SQLSentence.find('(', 0);
-		end = SQLSentence.find(')', SQLCurrentPointer);
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		while (SQLSentence[end] != ')')
+			--end;
 		if (end == -1)
 		{
 			cout << "Error! Can not find key symbol ')'." << endl;
@@ -580,7 +586,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find(')', SQLCurrentPointer);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key symbol 'ï¼‰'." << endl;
+			cout << "Error! Can not find key symbol '£©'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -825,20 +831,3 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	return code;
 }
 
-int main(int argc, char *argv[]) // this is just a test main function
-{
-	string SQLSentence;
-	condition SQLCondition;
-	int conditionCode = 0;
-	int stop = 0;
-	int fileReadFlag = 0;
-	while (!stop)
-	{
-		conditionCode = interpreter(SQLSentence, fileReadFlag, SQLCondition);
-		if (conditionCode == QUIT_NUMBER)
-			stop = 1;
-		SQLCondition.clearClass();
-	}
-	cout << "Press Any Key to Continue..." << endl;
-	return 0;
-}
