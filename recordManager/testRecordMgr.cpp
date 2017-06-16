@@ -13,7 +13,7 @@ int main(void) {
     BPLUSTREE BT(BLOCKSIZE);
     buffermanager bufferMgr;
 
-//    catalogMgr.CreateTable("test_table", "t_id int, t_val int, primary key(t_id)", BT);
+//    catalogMgr.CreateTable("test_table", "t_id int, t_val int", BT);
 
     RecordManager recordManager("test_table", catalogMgr, bufferMgr, BT);
 

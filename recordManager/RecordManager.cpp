@@ -824,6 +824,37 @@ bool RecordManager::checkInRange(vector<Range *> &ranges, map<string, string> &v
 }
 
 void RecordManager::checkTupleInBuffer(vector<Range *> &ranges) {
+    int blockNum = bufferMgr.FindBlockinBuffer(tableName + ".rec", 0);
+    char *tuplePos = bufferMgr.GetDetail(blockNum, 0);
+    istrstream allTupleStrIn(tuplePos);
 
+    string tuple;
+    int posBegin = (int)allTupleStrIn.tellg();
+    while (getline(allTupleStrIn, tuple)) {
+        int posEnd = (int)allTupleStrIn.tellg();
+#if DEBUG_IT
+        cout << tuple << endl;
+#endif
+        if (tuple[0] == ' ')
+            continue;
+
+        istrstream tupleStrIn(tuple.c_str());
+
+        map<string, string> valueOfAttr;
+        for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+            string value;
+            tupleStrIn >> value;
+            valueOfAttr.insert(pair<string, string>(attrIter->attrname, value));
+        }
+
+        if (checkInRange(ranges, valueOfAttr)) {
+            // TODO: delete
+            bufferMgr.Delete(blockNum, posBegin, posEnd - posBegin);
+//            for (int i = posBegin; i < posEnd; i++) {
+//                tuplePos[i] = ' ';
+//            }
+        }
+        posBegin = posEnd;
+    }
 }
 
