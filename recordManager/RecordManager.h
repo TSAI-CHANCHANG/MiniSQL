@@ -39,7 +39,8 @@ static map<RelationOp, string> relationOps{
         {eq,  "="}
 };
 
-struct RawData {
+struct IndexInfo {
+    string indexName;
     DataType type;
     string value;
 };
@@ -129,7 +130,8 @@ private:
     string tableName;
     Table tableInfo;
 
-    string generateInsertValues(string rawValues, vector<RawData> &indexInfos);
+    string generateInsertValues(string rawValues, vector<IndexInfo> &indexInfos);
+    void checkTuple(const string tuplesFile, vector<Range *> ranges);
 
 public:
     RecordManager(const string tableName) : tableName(tableName) {}
@@ -137,9 +139,9 @@ public:
     vector<Restrict *> parseWhere(string rawWhereClause = nullptr); // TODO: be private
     vector<Range *> generateRange(const vector<Restrict *> &restricts); // TODO: be private
     bool updateRange(Range *range, Restrict *restrict); // TODO: be private
-    bool insertRecord(string rawValues);
+    bool insertRecord(BPLUSTREE &BT, string rawValues);
     bool selectRecords(vector<string> attributes, string rawWhereClause);
-    bool deleteRecords(string rawWhereClause, BPLUSTREE &bPlusTree);
+    bool deleteRecords(BPLUSTREE &bPlusTree, string rawWhereClause);
 };
 
 

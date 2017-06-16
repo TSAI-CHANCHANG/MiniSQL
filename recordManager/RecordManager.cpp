@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <strstream>
+#include <fstream>
 #include <algorithm>
 #include <regex>
 #include "RecordManager.h"
@@ -18,7 +19,7 @@ using namespace std;
 
 extern block blocks[BLOCKNUMBER];
 
-bool RecordManager::insertRecord(string rawValues) {
+bool RecordManager::insertRecord(BPLUSTREE &BT, string rawValues) {
     catalogmanager catalogMgr;
     tableInfo = catalogMgr.GetTable(tableName);
 
@@ -28,7 +29,7 @@ bool RecordManager::insertRecord(string rawValues) {
         cerr << "Error: " << "No such table named: " << tableName << endl;
     }
 
-    vector<RawData> indexInfos;
+    vector<IndexInfo> indexInfos;
 
     string resultRecord = generateInsertValues(rawValues, indexInfos); // rawData used for get index info
 #if DEBUG_IT
@@ -56,13 +57,17 @@ bool RecordManager::insertRecord(string rawValues) {
 
     if (resultRecord != "") {
         // TODO: update index, after specify index Manager interface
-//    BPLUSTREE bplustree(blockNum); // ??? blockNum是啥？
+        for (IndexInfo indexInfo : indexInfos) {
+            indexInfo.value;
+            string indexFile = indexInfo.indexName + ".idx";
+            BT.Insert(indexInfo.type, &indexFile, &indexInfo.value, blockNum, blockOffset);
+        }
     }
 
     return true;
 }
 
-string RecordManager::generateInsertValues(string rawValues, vector<RawData> &indexInfos) {
+string RecordManager::generateInsertValues(string rawValues, vector<IndexInfo> &indexInfos) {
     string resultRecord;
     int tmp_i;
     float tmp_f;
@@ -120,10 +125,11 @@ string RecordManager::generateInsertValues(string rawValues, vector<RawData> &in
 
         if ((*iter).indexname != "noindex") {
             // TODO: indexname 如何使用
-            RawData rawData;
-            rawData.type = static_cast<DataType>((*iter).type);
-            rawData.value = valueTerm;
-            indexInfos.push_back(rawData);
+            IndexInfo indexInfo;
+            indexInfo.type = static_cast<DataType>((*iter).type);
+            indexInfo.value = valueTerm;
+            indexInfo.indexName = (*iter).indexname;
+            indexInfos.push_back(indexInfo);
         }
     }
     if (strIn.bad()) {
@@ -147,7 +153,10 @@ bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClau
     return true;
 }
 
-bool RecordManager::deleteRecords(string rawWhereClause = "", BPLUSTREE &bPlusTree) {
+bool RecordManager::deleteRecords(BPLUSTREE &bPlusTree, string rawWhereClause = "") {
+    catalogmanager catalogMgr;
+    tableInfo = catalogMgr.GetTable(tableName);
+
     if (rawWhereClause.empty()) {
         // TODO: simple fetch all
         buffermanager bufferMgr;
@@ -173,33 +182,64 @@ bool RecordManager::deleteRecords(string rawWhereClause = "", BPLUSTREE &bPlusTr
     } else {
         vector<Restrict *> restricts = parseWhere(rawWhereClause); // TODO: 记得delete掉
         vector<Range *> ranges = generateRange(restricts);
+#if 0
         for (Range *range : ranges) {
+            cout << "Range output: ";
+            cout << range->type << " " << range->attrName << " " << range->valid << endl;
+        }
+
+#endif
+#if 0
+        for (Attribute attr : tableInfo.Attr) {
+            cout << attr.attrname << endl;
+        }
+#endif
+        for (Range *range : ranges) {
+#if DEBUG_IT
+            cout << "Range output: ";
+            cout << range->type << " " << range->attrName << " " << range->valid << endl;
+#endif
             vector<Attribute>::iterator attrIter = find_if(tableInfo.Attr.begin(), tableInfo.Attr.end(), [range](Attribute attr) {
                 return (attr.attrname == range->attrName && attr.indexname != "noindex");
             });
             if (attrIter != tableInfo.Attr.end()) {
                 // find in index
+                string indexFile = (*attrIter).indexname + ".idx";
                 switch (range->type) {
                     case int_t: {
                         IntRange *intRange = static_cast<IntRange *>(range);
                         // TODO: parameter adjustment, and min, max include specify
-                        bPlusTree.Find(range->type, &tableName, to_string(intRange->minValue), to_string(intRange->maxValue), intRange->includeMin, intRange->includeMax) // TODO: file name 到底是啥？
+                        string minValStr = to_string(intRange->minValue);
+                        string maxValStr = to_string(intRange->maxValue);
+#if 0
+                        cout << "Range: " << intRange->minValue << intRange->maxValue << endl;
+#endif
+                        bPlusTree.Find(range->type, &indexFile, &minValStr, &maxValStr, !(intRange->includeMin), !(intRange->includeMax)); // TODO: file name 到底是啥？
                         break;
                     }
                     case float_t: {
                         FloatRange *floatRange = static_cast<FloatRange *>(range);
-                        bPlusTree.Find(range->type, &tableName, to_string(floatRange->minValue), to_string(floatRange->maxValue), floatRange->includeMin, floatRange->includeMax) // TODO: file name 到底是啥？
+                        string minValStr = to_string(floatRange->minValue);
+                        string maxValStr = to_string(floatRange->maxValue);
+                        bPlusTree.Find(range->type, &indexFile, &minValStr, &maxValStr, !(floatRange->includeMin), !(floatRange->includeMax)); // TODO: file name 到底是啥？
                         break;
                     }
                     case char_t: {
                         StringRange *stringRange = static_cast<StringRange *>(range);
                         // TODO: string 该如何定
+                        if (stringRange->value != "")
+                            bPlusTree.Find(range->type, &indexFile, &stringRange->value, &stringRange->value, false, false);
                         break;
                     }
-
+                    default:
+                        break; // TODO: only check one index
                 }
+                break;
+            } else {
+                // TODO: no index
             }
         }
+//        checkTuple(indexFi);
     }
     return true;
 }
@@ -218,6 +258,7 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
             RelationOp op = static_cast<RelationOp>(i);
             if (restriction.find(relationOps.find(op)->second) != string::npos) {
                 relationOp = op;
+                break;
             }
         }
         if (relationOp == invalidOp) {
@@ -237,6 +278,11 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
 
 #if 1
         vector<Attribute>::iterator attrIter;
+#if 0
+        cout << "attr num: ";
+        cout << tableInfo.Attr.size();
+        cout << endl;
+#endif
         for (attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
             if (attrIter->attrname == attrName) {
                 istrstream valueStrIn(value.c_str(), value.length());
@@ -280,24 +326,35 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
                     default:
                         break;
                 }
-            } else {
-                cerr << "Error: " << "No such attribute" << endl;
-                return vector<Restrict *>(0);
+                break;
             }
+        }
+        if (attrIter == tableInfo.Attr.end()) {
+            cerr << "Error: " << "No such attribute" << endl;
+            return vector<Restrict *>(0);
         }
 #endif
     }
 
 #if DEBUG_IT
+    cout << "Restricts: " << endl;
     for (Restrict *restrict : restricts) {
-        cout << restrict->attrName << relationOps.find(restrict->op)->second << restrict->op;
+        cout << restrict->attrName << relationOps.find(restrict->op)->second;
         switch (restrict->type) {
-            case int_t:
+            case int_t: {
                 cout << ((IntRestrict *)(restrict))->value << endl;
-            case float_t:
+                break;
+            }
+            case float_t: {
                 cout << ((FloatRestrict *)(restrict))->value << endl;
-            case char_t:
+                break;
+            }
+            case char_t: {
                 cout << ((StringRestrict *)(restrict))->value << endl;
+                break;
+            }
+            default:
+                break;
         }
     }
 #endif
@@ -306,6 +363,8 @@ vector<Restrict *> RecordManager::parseWhere(string rawWhereClause) {
 
 vector<Range *> RecordManager::generateRange(const vector<Restrict *> &restricts) {
     vector<Range *> ranges;
+
+    // TODO: problem with check restrict
     for (Restrict *restrict : restricts) {
         string attrName = restrict->attrName;
         vector<Range *>::iterator rangeIter = find_if(ranges.begin(), ranges.end(), [attrName](Range *range) -> bool {
@@ -392,6 +451,7 @@ vector<Range *> RecordManager::generateRange(const vector<Restrict *> &restricts
                         default:
                             break;
                     }
+                    ranges.push_back(static_cast<Range *>(stringRange));
                     break;
                 }
             }
@@ -583,5 +643,33 @@ bool RecordManager::updateRange(Range *range, Restrict *restrict) {
             break;
     }
     return true;
+}
+
+void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) {
+    const string file = tuplesFile + ".idx";
+    std::fstream s(file, s.binary | s.trunc | s.in | s.out);
+    if (!s.is_open()) {
+        std::cout << "failed to open " << file << '\n';
+    } else {
+        int blockNum, blockOffset;
+        s >> blockNum >> blockOffset;
+        cout << blockNum << blockOffset << endl;
+#if 0
+        // write
+        double d = 3.14;
+        s.write(reinterpret_cast<char*>(&d), sizeof d); // binary output
+        s << 123 << "abc";                              // text output
+
+        // for fstream, this moves the file position pointer (both put and get)
+        s.seekp(0);
+
+        // read
+        s.read(reinterpret_cast<char*>(&d), sizeof d); // binary input
+        int n;
+        std::string str;
+        if (s >> n >> str)                             // text input
+            std::cout << "read back from file: " << d << ' ' << n << ' ' << str << '\n';
+#endif
+    }
 }
 
