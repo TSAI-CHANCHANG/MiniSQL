@@ -18,12 +18,12 @@ int main(void) {
     RecordManager recordManager("test_table", catalogMgr, bufferMgr, BT);
 
 #if 0
-    recordManager.insertRecord(BT, "3, 101");
-    recordManager.insertRecord(BT, "5, 102");
-    recordManager.insertRecord(BT, "7, 103");
-    recordManager.insertRecord(BT, "9, 101");
-    recordManager.insertRecord(BT, "4, 101");
-    recordManager.insertRecord(BT, "4, 105");
+    recordManager.insertRecord("3, 101");
+    recordManager.insertRecord("5, 102");
+    recordManager.insertRecord("7, 103");
+    recordManager.insertRecord("9, 101");
+    recordManager.insertRecord("4, 101");
+    recordManager.insertRecord("4, 105");
 #endif
 //    cout << catalogMgr.CreateTable("testTable1", "t_id int,t_name   char(35) \n  unique ,   primary     key(t_id)", BT)
 //         << endl;

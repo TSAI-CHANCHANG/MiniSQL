@@ -47,6 +47,11 @@ struct IndexInfo {
     string value;
 };
 
+struct KeysWithType {
+    DataType type;
+    vector<string> keys;
+};
+
 struct Restrict {
     Restrict() {}
 

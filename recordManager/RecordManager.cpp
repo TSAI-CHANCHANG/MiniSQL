@@ -656,12 +656,12 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> &ranges)
     } else {
         int blockNumInFile, blockOffsetInFile;
 
-        map<string, vector<string>> updatedKeys; // to be updated according to delete
+        map<string, KeysWithType> updatedKeys; // to be updated according to delete
 
         for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
             if (attrIter->indexname != "noindex") {
-                vector<string> keys;
-                updatedKeys.insert(pair<string, vector<string>>(attrIter->indexname, keys));
+                KeysWithType keys;
+                updatedKeys.insert(pair<string, KeysWithType>(attrIter->indexname, keys));
             }
         }
 
@@ -705,7 +705,8 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> &ranges)
 
                 for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
                     if (attrIter->indexname != "noindex") {
-                        updatedKeys.find(attrIter->indexname)->second.push_back(valueOfAttr.find(attrIter->attrname)->second);
+                        updatedKeys.find(attrIter->indexname)->second.type = (DataType)attrIter->type;
+                        updatedKeys.find(attrIter->indexname)->second.keys.push_back(valueOfAttr.find(attrIter->attrname)->second);
                     }
                 }
 #endif
@@ -714,7 +715,8 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> &ranges)
 
         // update index
         for (auto keys : updatedKeys) {
-
+            string str = keys.first + ".idx";
+            bPlusTree.Delete(keys.second.type, &str, keys.second.keys);
         }
 
 #if 0
