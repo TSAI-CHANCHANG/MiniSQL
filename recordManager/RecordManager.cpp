@@ -234,6 +234,7 @@ bool RecordManager::deleteRecords(BPLUSTREE &bPlusTree, string rawWhereClause = 
                     default:
                         break; // TODO: only check one index
                 }
+                checkTuple(indexFile, ranges);
                 break;
             } else {
                 // TODO: no index
@@ -646,14 +647,17 @@ bool RecordManager::updateRange(Range *range, Restrict *restrict) {
 }
 
 void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) {
-    const string file = tuplesFile + ".idx";
-    std::fstream s(file, s.binary | s.trunc | s.in | s.out);
-    if (!s.is_open()) {
+    const string file = "select.tmp";
+    std::ifstream posFileStream(file);
+    if (!posFileStream.is_open()) {
         std::cout << "failed to open " << file << '\n';
     } else {
         int blockNum, blockOffset;
-        s >> blockNum >> blockOffset;
-        cout << blockNum << blockOffset << endl;
+#if DEBUG_IT
+        while (posFileStream >> blockNum >> blockOffset)
+            cout << blockNum << " " << blockOffset << endl;
+#endif
+
 #if 0
         // write
         double d = 3.14;

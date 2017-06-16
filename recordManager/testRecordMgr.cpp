@@ -21,6 +21,8 @@ int main(void) {
     recordManager.insertRecord(BT, "5, 102");
     recordManager.insertRecord(BT, "7, 103");
     recordManager.insertRecord(BT, "9, 101");
+    recordManager.insertRecord(BT, "4, 101");
+    recordManager.insertRecord(BT, "4, 105");
 #endif
 //    cout << catalogMgr.CreateTable("testTable1", "t_id int,t_name   char(35) \n  unique ,   primary     key(t_id)", BT)
 //         << endl;
