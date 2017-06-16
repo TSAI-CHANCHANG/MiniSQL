@@ -690,6 +690,7 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) 
                 // TODO: delete
 #if DEBUG_IT
                 cout << "To be deleted: " << blockNumInFile << " " << blockOffsetInFile << endl;
+                bufferMgr.Delete(blockNum, blockOffsetInFile, size);
 #endif
             }
         }
