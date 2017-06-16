@@ -10,6 +10,8 @@
 #include <map>
 #include <limits>
 #include "../index+catalog+buffer/table.h"
+#include "../index+catalog+buffer/buffermanager.h"
+#include "../index+catalog+buffer/catalogmanager.h"
 #include "../index+catalog+buffer/IndexManager.h"
 
 using namespace std;
@@ -129,12 +131,15 @@ class RecordManager {
 private:
     string tableName;
     Table tableInfo;
+    catalogmanager &catalogMgr;
+    buffermanager &bufferMgr;
 
     string generateInsertValues(string rawValues, vector<IndexInfo> &indexInfos);
     void checkTuple(const string tuplesFile, vector<Range *> ranges);
 
 public:
-    RecordManager(const string tableName) : tableName(tableName) {}
+    RecordManager(const string tableName, catalogmanager &catalogMgr, buffermanager &bufferMgr)
+            : tableName(tableName), catalogMgr(catalogMgr), bufferMgr(bufferMgr) {}
 
     vector<Restrict *> parseWhere(string rawWhereClause = nullptr); // TODO: be private
     vector<Range *> generateRange(const vector<Restrict *> &restricts); // TODO: be private

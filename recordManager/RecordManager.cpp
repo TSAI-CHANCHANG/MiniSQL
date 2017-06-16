@@ -652,11 +652,21 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) 
     if (!posFileStream.is_open()) {
         std::cout << "failed to open " << file << '\n';
     } else {
-        int blockNum, blockOffset;
+        int blockNumInFile, blockOffsetInFile;
+        while (posFileStream >> blockNumInFile >> blockOffsetInFile) {
 #if DEBUG_IT
-        while (posFileStream >> blockNum >> blockOffset)
-            cout << blockNum << " " << blockOffset << endl;
+            cout << blockNumInFile << " " << blockOffsetInFile << endl;
 #endif
+            int blockNum;
+            blockNum = bufferMgr.FindBlockinBuffer(tableInfo.getName() + ".rec", blockNumInFile);
+            char *tuplePos = bufferMgr.GetDetail(blockNum, blockOffsetInFile);
+
+#if DEBUG_IT
+            cout << "Tuple: " << tuplePos << endl;
+#endif
+            for (Range *range : ranges) {
+            }
+        }
 
 #if 0
         // write

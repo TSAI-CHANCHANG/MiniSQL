@@ -11,10 +11,11 @@ using namespace std;
 int main(void) {
     catalogmanager catalogMgr;
     BPLUSTREE BT(BLOCKSIZE);
+    buffermanager bufferMgr;
 
 //    catalogMgr.CreateTable("test_table", "t_id int, t_val int, primary key(t_id)", BT);
 
-    RecordManager recordManager("test_table");
+    RecordManager recordManager("test_table", catalogMgr, bufferMgr);
 
 #if 0
     recordManager.insertRecord(BT, "3, 101");
