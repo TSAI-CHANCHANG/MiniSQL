@@ -1,30 +1,26 @@
 #include "catalogmanager.h"
+
+
 #include <strstream>
 #include<iostream>
+#include<fstream>
 
 #define MAXINT 32767;
 
 extern block blocks[BLOCKNUMBER];
-
-catalogmanager::catalogmanager()
-{
-}
-
+extern short flag;
+//通过缓存，从文件中获得一个表
 Table catalogmanager::GetTable(string Tablename)
 {
     int i = 0;
     int blocknum;
     string table;
-    table = blocks[buf.FindBlockinBuffer(Tablename+".tab",i)].content;//找到这个文件中的第一个block
+    table = blocks[buf.FindBlockinBuffer(Tablename+".tab",i)].content;
     int pos1 = table.find(' ',0);
     int pos2 = table.find(' ',pos1+1);
-    blocknum = atoi(table.substr(pos1+1,pos2-pos1-1).c_str());//文件中的第二项是blocknum，就是这个文件中一共有多少个block
-    for (i=1;i<=blocknum;i++)//将所有的block读进table这个字符串中
-    {
-        table+=blocks[buf.FindBlockinBuffer(Tablename+".tab",i)].content;
-    }
+    blocknum = atoi(table.substr(pos1+1,pos2-pos1-1).c_str());//文件中的第二项是blocknum，就是.rec文件中一共有多少个block
+
     istrstream strin(table.c_str(),table.length());//字符串输入流
-    //cout<<sizeof(table)<<endl;
     Table tab;
     string tmp;
     strin>>tmp>>tab.blocknum>>tab.Attrnum>>tab.primary;//读入tablename blocknum primary
@@ -44,49 +40,56 @@ Table catalogmanager::GetTable(string Tablename)
     return tab;
 }
 
-int catalogmanager::DropTable(string Tablename)
+//删除表以及建立在这个表上的所有索引
+//（这里的删除索引是指找到所有建立在这个表上的索引，调用index manager上的dropindex）
+int catalogmanager::DropTable(string Tablename, BPLUSTREE& BT)
 {
     if (!buf.FindFile(Tablename+".tab")){
         //如果没有这个表，报错
         cout<<"No Such Table"<<endl;
-        return -2;
+        return NO_SUCH_TABLE;
     }
     Table tab = GetTable(Tablename);//先找到这个表
     for (int i =0; i<tab.Attrnum;i++)
     {
         if (tab.Attr[i].indexname != "noindex")//如果某一个attribute上有index
         {
-            //!!!调用indexmanager中的dropindex   这个工作到底是这里干好还是api干好呢？
-            buf.DeleteFile(tab.Attr[i].indexname+".idx");//!!!不知道要不要写，不知道index manager写了没
+            string filename = tab.Attr[i].indexname+".idx";
+            BT.DropIndex(&filename,tab.Attr[i].type);
         }
     }
+    buf.DeleteFile(Tablename+".rec");//删表的内容
     buf.DeleteFile(Tablename+".tab");//删表
-    return 0;
+    return SUCCESS;
 }
 
-int catalogmanager::DropIndex(string Indexname, string Tablename)
+//删除索引（将这个index对应的表的对应的attribute上的indexname设为noindex）
+int catalogmanager::DropIndex(string Indexname, string Tablename, BPLUSTREE& BT)
 {
     if (!buf.FindFile(Tablename+".tab")){
         cout<<"No Such Table"<<endl;
-        return -2;
+        return NO_SUCH_TABLE;
     }
     Table tab = GetTable(Tablename);//找到这个index对应的表
     int i;
     for (i = 0; i<tab.Attrnum;i++)
         if (tab.Attr[i].indexname==Indexname)//找到这个index对应的attribute
         {
-            buf.DeleteFile(tab.Attr[i].indexname+".idx");//!!!不知道要不要写，不知道index manager写了没
+            string filename = tab.Attr[i].indexname+".idx";
+            BT.DropIndex(&filename,tab.Attr[i].type);
             tab.Attr[i].indexname = "noindex";//设为noindex
             break;
         }
     if (i==tab.Attrnum){
         cout<<"No Such Index"<<endl;
-        return -2;
+        return NO_SUCH_INDEX;
     }
+
     SetTable(tab);
-    return 0;
+    return SUCCESS;
 }
 
+//通过缓存，将一个表存回文件中
 void catalogmanager::SetTable(Table& tab)
 {
     static char table[BLOCKSIZE];
@@ -98,9 +101,10 @@ void catalogmanager::SetTable(Table& tab)
     for (int j = 0;j<tab.Attrnum;j++)
     {
         int length = tab.Attr[j].attrname.length()+tab.Attr[j].indexname.length()+4;//估测的占用字节流的长度
-        if (strout.tellp()+length>BLOCKSIZE)//如果这个block放不下了
+        if ((int)strout.tellp()+length>BLOCKSIZE)//如果这个block放不下了
         {
             strcpy(blocks[blocknum].content,table);//将字符流内容拷进来
+            blocks[blocknum].SetBlock(tab.getName()+".tab",i);
             buf.DirtBlock(blocknum);//这个块已经被修改过了
             i++;
             blocknum = buf.FindBlockinBuffer(tab.getName()+".tab",i);//再找个块来
@@ -110,38 +114,107 @@ void catalogmanager::SetTable(Table& tab)
              <<' '<<tab.Attr[j].indexname<<' '<<tab.Attr[j].unique;//将attribute的信息输入字符流
     }
     strcpy(blocks[blocknum].content,table);//最后一个块
-
-    tab.blocknum = i;
-    strout.seekp(0);
-    strout<<tab.getName()<<" "<<tab.blocknum<<' '<<tab.Attrnum<<" "<<tab.primary;//blocknum数量有误，确定之后重新输入一次
+    blocks[blocknum].SetBlock(tab.getName()+".tab",i);
     buf.DirtBlock(blocknum);
+    return;
 }
 
-int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrname)
+void catalogmanager::CreateEmptyFile(string fileName)
+{
+    const char* filename = fileName.c_str();
+    fstream File(filename, std::ios::in|ios::app);
+    File.close();
+}
+
+//把建立索引要用的那些东西都找来放在一个.idx文件中
+void catalogmanager::PrepareForIndex(string FromFile, string ToFile, int tpnum, const Table& tab)
+{
+    fstream fs(ToFile.c_str(),ios::app);
+    for (int i = 0;i<tab.blocknum;i++)
+    {
+        int blocknum = buf.FindBlockinBuffer(FromFile,i);
+
+        string str = blocks[blocknum].content;
+
+        istrstream STR(str.c_str(),str.length());
+        int l = (int)STR.tellg();
+        STR.seekg(0,ios::end);
+        l = (int)STR.tellg()-l;
+        STR.seekg(0,ios::beg);
+        STR.clear();
+
+        vector<int> pos;
+        if (str[0]!=' ') pos.push_back(0);
+        int post = 0;
+        while ((post = str.find('\n',post))!=-1)
+        {
+            if (str[post+1]!=' ') pos.push_back(post);
+            post++;
+        }
+
+        int count = 0;
+        while (1)
+        {
+            for (int j = 0; j<tab.Attrnum;j++)
+            {
+                string element;
+                STR>>element;
+                if ((int)STR.tellg()>=l||(int)STR.tellg()==-1) break;
+                if (j==tpnum)
+                {
+                    fs<<element<<" "<<i<<" "<<pos[count++]<<"\n";
+                    //文件中是 key blocknum offset（这个offset是这一个tuple的起始位置）
+                }
+            }
+            if ((int)STR.tellg()>=l||(int)STR.tellg()==-1) break;
+        }
+    }
+    fs.close();
+}
+
+//建立索引（将这个index对应的表的对应的attribute上的indexname设为indexname）
+int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrname, BPLUSTREE& BT)
 {
     if (!buf.FindFile(Tablename+".tab")){
-        //已经存在这个表了
         cout<<"No Such Table"<<endl;
-        return -2;
+        return NO_SUCH_TABLE;
     }
     Table tab = GetTable(Tablename);//要建立index，先找到对应的表
     int i;
     for (i = 0; i<tab.Attrnum;i++)
         if (tab.Attr[i].attrname==Attrname)//找到对应表的对应attribute
         {
+            if (tab.Attr[i].indexname!="noindex")
+            {
+                cout<<"Has been existed!"<<endl;
+                return HAVE_SUCH_INDEX;
+            }
+
+            if (!tab.Attr[i].unique)
+            {
+                cout<<"It's not unique!"<<endl;
+                return CONSTRAINT_VIOLATION;
+            }
+
             tab.Attr[i].indexname = Indexname;
+            string filename = tab.Attr[i].indexname+".idx";
+            PrepareForIndex(tab.getName()+".rec",filename,i,tab);
+
+            BT.CreateIndex(&filename,tab.Attr[i].type);
             break;
         }
     if (i==tab.Attrnum){
         //有这个表但没这个attribute
         cout<<"No Such Attribute"<<endl;
-        return -2;
+        return NO_SUCH_TABLE;
     }
+
     SetTable(tab);
-    return 0;
+    return SUCCESS;
 }
 
-int catalogmanager::CreateTable(string Tablename, string Attributes)//Attributes是括号中的内容
+//建表
+int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& BT)//Attributes是括号中的内容
 {
     Table tab;
     tab.setName(Tablename);//表名
@@ -149,7 +222,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes)//Attributes
     {
         //这个表已经存在了
         cout<<"Already exist!"<<endl;
-        return -2;
+        return HAVE_SUCH_TABLE;
     }
     Attribute att;
     Attributes+=',';//最后加个,方便处理
@@ -172,15 +245,15 @@ int catalogmanager::CreateTable(string Tablename, string Attributes)//Attributes
             att.primary = att.unique = false;
 
             //处理两个,中间的这个串
-            att.defAtt(Attributes.substr(pos1, pos2-pos1));
+            int res = att.defAtt(Attributes.substr(pos1, pos2-pos1));
 
-            if (att.type == -1) return -2;//格式出错，返回的att.type=-1，于是报错，返回
+            if (res!=SUCCESS) return res;//格式出错，返回的att.type=-1，于是报错，返回
             tab.Attr.push_back(att);//存起来
             if (att.primary)//如果这个属性是个primary
                 if (tab.primary!=-1)//之前已经定义过primary重复，报错
                 {
                      cout<<"Two primary keys!"<<endl;
-                     return -2;
+                     return CONSTRAINT_DEFINATION_ERROR;
                 }
                 else
                     tab.primary = i;//这个表的primary确定
@@ -197,7 +270,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes)//Attributes
             if (tab.primary!=-1) {
 
                 cout<<"Two primary keys!"<<endl;
-                return -2;
+                return CONSTRAINT_DEFINATION_ERROR;
             }
             pos1 = Attributes.find('(',pos1);
             pos2 = Attributes.find(')',pos1+1);
@@ -205,6 +278,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes)//Attributes
             pos1 = Attributes.find(',',pos2)+1;
         }
     }
+
     if (Primarykey!="")//单独定义的primary需要定义在表格里
     {
         for (int i = 0; i<tab.Attrnum;i++)
@@ -217,13 +291,28 @@ int catalogmanager::CreateTable(string Tablename, string Attributes)//Attributes
         if (tab.primary==-1)
         {
             cout<<"No Such Attribute!"<<endl;
-            return -2;
+            return CONSTRAINT_DEFINATION_ERROR;
         }
     }
     tab.blocknum = 0;//先定义为0，settable过程中找
-    SetTable(tab);//将这个表的内容存回文件中
 
-    return tab.primary;//返回主键位置（第几个attribute），没有就是-1
+    if (tab.primary!=-1)
+    {
+        tab.Attr[tab.primary].indexname=tab.Attr[tab.primary].attrname;
+
+        //primary key自动建立索引，但是是空的
+
+        string filename = tab.getName()+".rec";
+        CreateEmptyFile(filename);
+
+        filename = tab.Attr[tab.primary].indexname+".idx";
+        CreateEmptyFile(filename);
+
+        BT.CreateIndex(&filename,tab.Attr[tab.primary].type);
+    }
+    tab.blocknum = 0;
+    SetTable(tab);//将这个表的内容存回文件中
+    return SUCCESS;
 }
 
 int Min(int a, int b)//在找得到的两个位置里找最小的
@@ -233,7 +322,7 @@ int Min(int a, int b)//在找得到的两个位置里找最小的
     if (a>b) return b; else return a;
 }
 
-void Attribute::defAtt(string attDef)//处理表的属性定义
+int Attribute::defAtt(string attDef)//处理表的属性定义
 {
     attDef+=' ';
     int pos1,pos2;//考虑多个空格
@@ -244,7 +333,7 @@ void Attribute::defAtt(string attDef)//处理表的属性定义
     if ((pos1>attDef.length()-1)||attDef.find(' ',pos1)==-1&&attDef.find('\n',pos1)==-1)
     {
         cout<<"Wrong Format"<<endl;
-        return;
+        return WRONG_DEFINATION_FORMAT;
     }
 
     pos2 = Min(attDef.find(' ',pos1),attDef.find('\n',pos1));
@@ -256,26 +345,26 @@ void Attribute::defAtt(string attDef)//处理表的属性定义
     if ( (pos1>attDef.length()-1)||attDef.find(' ',pos1)==-1&&attDef.find('\n',pos1)==-1) //报错
     {
         cout<<"Wrong Format"<<endl;
-        return;
+        return WRONG_DEFINATION_FORMAT;
     }
 
     pos2 = Min(attDef.find(' ',pos1),attDef.find('\n',pos1));
     //第二个字符串是类型
     if (attDef.substr(pos1,3)=="int")
     {
-        this->type = 1;
+        this->type = TYPE_INT;
         this->length = 0;
     }
     else
         if (attDef.substr(pos1,5)=="float")
         {
-            this->type = 2;
+            this->type = TYPE_FLOAT;
             this->length = 0;
         }
         else
             if (attDef.substr(pos1,4)=="char")
             {
-                this->type = 3;
+                this->type = TYPE_CHAR;
                 int pos1 = attDef.find('(');
                 int pos2 = attDef.find(')');
                 this->length = atoi(attDef.substr(pos1+1,pos2-pos1-1).c_str());
@@ -284,32 +373,32 @@ void Attribute::defAtt(string attDef)//处理表的属性定义
             {
                 //不属于三种类型，错误
                 cout<<"Wrong Type!"<<endl;
-                return;
+                return WRONG_DEFINATION_FORMAT;
             }
 
     pos1 = pos2+1;
     //处理末尾空格
     while (pos1<=attDef.length()-1&&(attDef[pos1]==' '||attDef[pos1]=='\n')) pos1++;
-    if (pos1>attDef.length()-1) return;
+    if (pos1>attDef.length()-1) return SUCCESS;
 
     //如果后面还有有意义的字符串，就是约束
     pos2 = Min(attDef.find(' ',pos1),attDef.find('\n',pos1));
     if (attDef.substr(pos1,pos2-pos1)=="unique")
     {
         this->unique = true;
-        return;
+        return SUCCESS;
     }
     else if (attDef.substr(pos1,pos2-pos1)=="primary")
     {
         this->unique = this->primary = true;
-        return;
+        return SUCCESS;
     }
     else
     {
         cout<<"Wrong Constraint!"<<endl;
         this->type = -1;
-        return;
+        return WRONG_DEFINATION_FORMAT;
     }
 
-    return;
+    return SUCCESS;
 }
