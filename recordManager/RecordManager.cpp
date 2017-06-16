@@ -20,7 +20,7 @@ using namespace std;
 
 extern block blocks[BLOCKNUMBER];
 
-bool RecordManager::insertRecord(BPLUSTREE &BT, string rawValues) {
+bool RecordManager::insertRecord(string rawValues) {
     catalogmanager catalogMgr;
     tableInfo = catalogMgr.GetTable(tableName);
 
@@ -61,7 +61,7 @@ bool RecordManager::insertRecord(BPLUSTREE &BT, string rawValues) {
         for (IndexInfo indexInfo : indexInfos) {
             indexInfo.value;
             string indexFile = indexInfo.indexName + ".idx";
-            BT.Insert(indexInfo.type, &indexFile, &indexInfo.value, blockNum, blockOffset);
+            bPlusTree.Insert(indexInfo.type, &indexFile, &indexInfo.value, blockNum, blockOffset);
         }
     }
 
@@ -154,7 +154,7 @@ bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClau
     return true;
 }
 
-bool RecordManager::deleteRecords(BPLUSTREE &bPlusTree, string rawWhereClause = "") {
+bool RecordManager::deleteRecords(string rawWhereClause = "") {
     catalogmanager catalogMgr;
     tableInfo = catalogMgr.GetTable(tableName);
 
@@ -239,9 +239,10 @@ bool RecordManager::deleteRecords(BPLUSTREE &bPlusTree, string rawWhereClause = 
                 break;
             } else {
                 // TODO: no index
+                checkTupleInBuffer(ranges);
+                break;
             }
         }
-//        checkTuple(indexFi);
     }
     return true;
 }
@@ -647,13 +648,23 @@ bool RecordManager::updateRange(Range *range, Restrict *restrict) {
     return true;
 }
 
-void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) {
+void RecordManager::checkTuple(const string tuplesFile, vector<Range *> &ranges) {
     const string file = "select.tmp";
     std::ifstream posFileStream(file);
     if (!posFileStream.is_open()) {
         std::cout << "failed to open " << file << '\n';
     } else {
         int blockNumInFile, blockOffsetInFile;
+
+        map<string, vector<string>> updatedKeys; // to be updated according to delete
+
+        for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+            if (attrIter->indexname != "noindex") {
+                vector<string> keys;
+                updatedKeys.insert(pair<string, vector<string>>(attrIter->indexname, keys));
+            }
+        }
+
         while (posFileStream >> blockNumInFile >> blockOffsetInFile) {
 #if DEBUG_IT
             cout << blockNumInFile << " " << blockOffsetInFile << endl;
@@ -691,8 +702,19 @@ void RecordManager::checkTuple(const string tuplesFile, vector<Range *> ranges) 
 #if DEBUG_IT
                 cout << "To be deleted: " << blockNumInFile << " " << blockOffsetInFile << endl;
                 bufferMgr.Delete(blockNum, blockOffsetInFile, size);
+
+                for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+                    if (attrIter->indexname != "noindex") {
+                        updatedKeys.find(attrIter->indexname)->second.push_back(valueOfAttr.find(attrIter->attrname)->second);
+                    }
+                }
 #endif
             }
+        }
+
+        // update index
+        for (auto keys : updatedKeys) {
+
         }
 
 #if 0
@@ -797,5 +819,9 @@ bool RecordManager::checkInRange(vector<Range *> &ranges, map<string, string> &v
     }
 
     return true;
+}
+
+void RecordManager::checkTupleInBuffer(vector<Range *> &ranges) {
+
 }
 
