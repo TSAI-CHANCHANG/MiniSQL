@@ -21,7 +21,6 @@ using namespace std;
 extern block blocks[BLOCKNUMBER];
 
 bool RecordManager::insertRecord(string rawValues) {
-    catalogmanager catalogMgr;
     tableInfo = catalogMgr.GetTable(tableName);
 
     const bool NO_SUCH_TABLE_ERROR = false; // for test
@@ -155,7 +154,7 @@ bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClau
 }
 
 bool RecordManager::deleteRecords(string rawWhereClause = "") {
-    catalogmanager catalogMgr;
+//    catalogmanager catalogMgr;
     tableInfo = catalogMgr.GetTable(tableName);
 
     if (rawWhereClause.empty()) {
@@ -233,7 +232,7 @@ bool RecordManager::deleteRecords(string rawWhereClause = "") {
                         break;
                     }
                     default:
-                        break; // TODO: only check one index
+                        break; // only check one index
                 }
                 checkTuple(indexFile, ranges);
                 break;
@@ -830,6 +829,16 @@ void RecordManager::checkTupleInBuffer(vector<Range *> &ranges) {
 
     string tuple;
     int posBegin = (int)allTupleStrIn.tellg();
+
+    map<string, KeysWithType> updatedKeys; // to be updated according to delete
+
+    for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+        if (attrIter->indexname != "noindex") {
+            KeysWithType keys;
+            updatedKeys.insert(pair<string, KeysWithType>(attrIter->indexname, keys));
+        }
+    }
+
     while (getline(allTupleStrIn, tuple)) {
         int posEnd = (int)allTupleStrIn.tellg();
 #if DEBUG_IT
@@ -848,13 +857,20 @@ void RecordManager::checkTupleInBuffer(vector<Range *> &ranges) {
         }
 
         if (checkInRange(ranges, valueOfAttr)) {
-            // TODO: delete
             bufferMgr.Delete(blockNum, posBegin, posEnd - posBegin);
-//            for (int i = posBegin; i < posEnd; i++) {
-//                tuplePos[i] = ' ';
-//            }
+            for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+                if (attrIter->indexname != "noindex") {
+                    updatedKeys.find(attrIter->indexname)->second.type = (DataType)attrIter->type;
+                    updatedKeys.find(attrIter->indexname)->second.keys.push_back(valueOfAttr.find(attrIter->attrname)->second);
+                }
+            }
         }
         posBegin = posEnd;
+    }
+
+    for (auto keys : updatedKeys) {
+        string str = keys.first + ".idx";
+        bPlusTree.Delete(keys.second.type, &str, keys.second.keys);
     }
 }
 
