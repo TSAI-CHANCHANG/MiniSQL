@@ -10,7 +10,8 @@
 class catalogmanager
 {
 public:
-    catalogmanager(){}
+    catalogmanager(buffermanager& buff):buf(buff){
+    }
 
     int CreateTable(string Tablename, string Attributes,BPLUSTREE& BT);
     //建表，primary理应有一个同名的index，但因为目前没有数据，所以要等record第一次插入的时候再建立索引
@@ -33,13 +34,14 @@ public:
     void SetTable(Table& tab);
     //通过缓存，将一个表存回文件中
 
+    void PrepareForIndex(string FromFile, string ToFile, int tpnum, const Table& tab);
+
 
 private:
-    buffermanager buf;
+    buffermanager& buf;
 
     void CreateEmptyFile(string fileName);
 
-    void PrepareForIndex(string FromFile, string ToFile, int tpnum, const Table& tab);
 
 
 };

@@ -32,12 +32,15 @@ public:
     //更新这个块的大小，返回值为有几个字节被占用了，而不是占用到下标多少的字节
 
     friend class buffermanager;
+
 };
 
 class buffermanager{
 public:
     buffermanager();
     ~buffermanager();
+
+    short ErrorInfo;
 
     int FindBlockinBuffer(string fileName, int offset);
     //在buffer中找一个块（没有就从文件中放到buffer里，返回这是第几个buffer block）

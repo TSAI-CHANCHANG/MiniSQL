@@ -12,10 +12,15 @@ extern short flag;
 //通过缓存，从文件中获得一个表
 Table catalogmanager::GetTable(string Tablename)
 {
+    ErrorInfo = SUCCESS;
     int i = 0;
     int blocknum;
-    string table="";
-    table += blocks[buf.FindBlockinBuffer(Tablename+".tab",i)].content;
+    string table;
+    if (!buf.FindFile(Tablename+".tab")) {
+        ErrorInfo = NO_SUCH_TABLE;
+        return NULL;
+    }
+    table = blocks[buf.FindBlockinBuffer(Tablename+".tab",i)].content;
     int pos1 = table.find(' ',0);
     int pos2 = table.find(' ',pos1+1);
     blocknum = atoi(table.substr(pos1+1,pos2-pos1-1).c_str());//文件中的第二项是blocknum，就是.rec文件中一共有多少个block
@@ -200,6 +205,7 @@ int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrn
             string filename = tab.Attr[i].indexname+".idx";
             PrepareForIndex(tab.getName()+".rec",filename,i,tab);
 
+			//cout << tab.Attr[i].type<<" "<< filename<<endl;
             BT.CreateIndex(&filename,tab.Attr[i].type);
             break;
         }

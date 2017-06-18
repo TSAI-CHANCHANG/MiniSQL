@@ -9,8 +9,6 @@
 
 block blocks[BLOCKNUMBER];//预计有10个buffer中的block
 
-short flag;
-
 void block::ClearBlock(){
     for (int i=0;i<BLOCKSIZE+1;i++) content[i]=0;
     filename = "";
@@ -82,7 +80,7 @@ int buffermanager::WriteBack(int blocknum)
 
 int buffermanager::FindBlockinBuffer(string fileName, int offset)
 {
-    flag = 0;
+    ErrorInfo = SUCCESS;
     //如果这个块已经在buffer中，返回这个块在buffer中的number
     for (int i = 0; i< BLOCKNUMBER; i++)
         if (blocks[i].used&& blocks[i].filename==fileName && blocks[i].fileoffset==offset)
@@ -93,7 +91,7 @@ int buffermanager::FindBlockinBuffer(string fileName, int offset)
 
     //如果不在，就先找buffer中一个空的块，然后将这个块从文件里写入buffer
     int blocknum = GetAnEmptyBlock();
-    if (WriteIn(fileName,offset,blocknum)==NOT_ENOUGH) flag = NO_SUCH_BLOCK;
+    if (WriteIn(fileName,offset,blocknum)==NOT_ENOUGH) ErrorInfo = NO_SUCH_BLOCK;
     return blocknum;
 }
 
@@ -197,7 +195,7 @@ void buffermanager::FindSuitBlockinBuffer(string fileName, int size, int* blockn
     {
         *blocknum = FindBlockinBuffer(fileName,i);
         //cout<<blocks[*blocknum].content<<endl;
-        if (flag==NO_SUCH_BLOCK){
+        if (ErrorInfo==NO_SUCH_BLOCK){
             ofstream File(fileName.c_str(),ios::app);
             File.seekp(i*BLOCKSIZE, ios::beg);
             File<<" ";
@@ -287,6 +285,12 @@ int buffermanager::DeleteFile(string filename)
 
 bool buffermanager::FindFile(string filename)
 {
+    for (int i ; i< BLOCKNUMBER; i++)
+    {
+        if (blocks[i].filename==filename)
+            return true;
+    }
+
     fstream File(filename.c_str());
     if (!File.is_open())
     {
