@@ -8,10 +8,10 @@
 
 #define CREATE_TABEL 0
 #define CREATE_TABEL_NO_INDEX 0
-#define INSERT_VAL 0
+#define INSERT_VAL 1
 #define INSERT_VAL_NO_INDEX 0
 #define SELECT_REC 0
-#define SELECT_REC_NO_INDEX 1
+#define SELECT_REC_NO_INDEX 0
 #define DELETE_REC 0
 
 
@@ -30,8 +30,8 @@ int main(void) {
     cout << catalogMgr.CreateTable("test_table_no_index", "t_id int, t_val int", BT);
 #endif
 
-//    RecordManager recordManager("test_table", catalogMgr, bufferMgr, BT);
-    RecordManager recordManagerNoIndex("test_table_no_index", catalogMgr, bufferMgr, BT);
+    RecordManager recordManager("test_table", catalogMgr, bufferMgr, BT);
+//    RecordManager recordManagerNoIndex("test_table_no_index", catalogMgr, bufferMgr, BT);
 
 #if INSERT_VAL
     recordManager.insertRecord("3, 101");

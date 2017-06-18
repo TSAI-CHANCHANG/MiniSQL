@@ -156,6 +156,8 @@ private:
     bool checkInRange(vector<Range *> &ranges, map<string, string> &valueOfAttr);
     bool updateRange(Range *range, Restrict *restrict); // TODO: be private
 
+    bool checkUnique(Attribute attr, string value);
+
     vector<Restrict *> parseWhere(string rawWhereClause = nullptr);
     vector<Range *> generateRange(const vector<Restrict *> &restricts);
 

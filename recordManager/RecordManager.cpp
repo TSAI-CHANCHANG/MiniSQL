@@ -43,7 +43,6 @@ bool RecordManager::insertRecord(string rawValues) {
     int blockNum;
     int blockOffset;
 
-    // TODO: resultRecord的最终形式的确定，换行？空格？
     bufferMgr.FindSuitBlockinBuffer(tableName + ".rec", resultRecord.length(), &blockNum, &blockOffset);
 #if DEBUG_IT
     cout << "blockNum: " << blockNum << " offset: " << blockOffset << endl;
@@ -56,7 +55,6 @@ bool RecordManager::insertRecord(string rawValues) {
 #endif
 
     if (resultRecord != "") {
-        // TODO: update index, after specify index Manager interface
         for (IndexInfo indexInfo : indexInfos) {
             indexInfo.value;
             string indexFile = indexInfo.indexName + ".idx";
@@ -82,17 +80,20 @@ string RecordManager::generateInsertValues(string rawValues, vector<IndexInfo> &
             resultRecord += " ";
 
         string valueTerm;
+        string currentValueStr;
 
         getline(strIn, valueTerm, ','); // TODO: not check comma in string
         istrstream strTermIn(valueTerm.c_str(), valueTerm.length());
         switch ((*iter).type) {
             case int_t:
                 strTermIn >> tmp_i; // TODO: check typeError
-                resultRecord += to_string(tmp_i);
+                currentValueStr = to_string(tmp_i);
+                resultRecord += currentValueStr;
                 break;
             case float_t:
                 strTermIn >> tmp_f;
-                resultRecord += to_string(tmp_f);
+                currentValueStr = to_string(tmp_f);
+                resultRecord += currentValueStr;
                 break;
             case char_t:
                 strTermIn >> tmp_s;
@@ -102,7 +103,8 @@ string RecordManager::generateInsertValues(string rawValues, vector<IndexInfo> &
                 }
                 tmp_s.erase(tmp_s.begin());
                 tmp_s.erase(tmp_s.end() - 1);
-                resultRecord += tmp_s;
+                currentValueStr = tmp_s;
+                resultRecord += currentValueStr;
                 break;
             default:
                 break;
@@ -121,10 +123,13 @@ string RecordManager::generateInsertValues(string rawValues, vector<IndexInfo> &
 
         if ((*iter).unique || (*iter).primary) {
 //            checkUnique() TODO: check unique: after done select
+            if (!checkUnique(*iter, currentValueStr)) {
+                cerr << "Error: " << "unique value duplicate!" << endl;
+                return "";
+            }
         }
 
         if ((*iter).indexname != "noindex") {
-            // TODO: indexname 如何使用
             IndexInfo indexInfo;
             indexInfo.type = static_cast<DataType>((*iter).type);
             indexInfo.value = valueTerm;
@@ -971,7 +976,7 @@ void RecordManager::checkSelectTuple(vector<Range *> &ranges, vector<string> &at
     const string file = "select.tmp";
     std::ifstream posFileStream(file);
     if (!posFileStream.is_open()) {
-        std::cout << "failed to open " << file << '\n';
+        std::cerr << "failed to open " << file << '\n';
     } else {
         int blockNumInFile, blockOffsetInFile;
 
@@ -1021,7 +1026,6 @@ void RecordManager::checkSelectTuple(vector<Range *> &ranges, vector<string> &at
 }
 
 void RecordManager::checkSelectTupleInBuffer(vector<Range *> &ranges, vector<string> &attributes) {
-    // TODO: checkSelectTuple directly...
     int blockNum = bufferMgr.FindBlockinBuffer(tableName + ".rec", 0); // TODO: Multi block
     char *tuplePos = bufferMgr.GetDetail(blockNum, 0);
     istrstream allTupleStrIn(tuplePos);
@@ -1052,5 +1056,49 @@ void RecordManager::checkSelectTupleInBuffer(vector<Range *> &ranges, vector<str
         }
         posBegin = posEnd;
     }
+}
+
+bool RecordManager::checkUnique(Attribute attr, string valueToInsert) {
+    if (attr.indexname != "noindex") {
+        string indexFile = attr.indexname + ".idx";
+        bPlusTree.Find(attr.type, &indexFile, &valueToInsert, &valueToInsert, false, false);
+        const string file = "select.tmp";
+        std::ifstream posFileStream(file);
+        if (!posFileStream.is_open()) {
+            std::cerr << "failed to open " << file << '\n';
+        } else {
+            int blockNumInFile, blockOffsetInFile;
+            if (posFileStream >> blockNumInFile >> blockOffsetInFile)
+                return false;
+        }
+    } else {
+        int blockNum = bufferMgr.FindBlockinBuffer(tableName + ".rec", 0); // TODO: Multi block
+        char *tuplePos = bufferMgr.GetDetail(blockNum, 0);
+        istrstream allTupleStrIn(tuplePos);
+
+        string tuple;
+
+        while (getline(allTupleStrIn, tuple)) {
+#if DEBUG_IT
+//        cout << tuple << endl;
+#endif
+            if (tuple[0] == ' ')
+                continue;
+
+            istrstream tupleStrIn(tuple.c_str());
+
+            map<string, string> valueOfAttr;
+            for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+                string value;
+                tupleStrIn >> value;
+                valueOfAttr.insert(pair<string, string>(attrIter->attrname, value));
+            }
+
+            if (valueToInsert == valueOfAttr.find(attr.attrname)->second)
+                return false;
+        }
+    }
+
+    return true;
 }
 
