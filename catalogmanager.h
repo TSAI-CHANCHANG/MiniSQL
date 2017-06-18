@@ -10,7 +10,7 @@
 class catalogmanager
 {
 public:
-    catalogmanager(buffermanager& buff):buf(buff){
+    catalogmanager(buffermanager& buff):buf(buff),ErrorInfo(SUCCESS){
     }
 
     int CreateTable(string Tablename, string Attributes,BPLUSTREE& BT);
@@ -36,13 +36,12 @@ public:
 
     void PrepareForIndex(string FromFile, string ToFile, int tpnum, const Table& tab);
 
+    short ErrorInfo;
 
 private:
     buffermanager& buf;
 
     void CreateEmptyFile(string fileName);
-
-
 
 };
 

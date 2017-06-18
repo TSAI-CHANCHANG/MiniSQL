@@ -8,13 +8,18 @@
 #define MAXINT 32767;
 
 extern block blocks[BLOCKNUMBER];
-extern short flag;
+
 //通过缓存，从文件中获得一个表
 Table catalogmanager::GetTable(string Tablename)
 {
+    ErrorInfo = SUCCESS;
     int i = 0;
     int blocknum;
     string table;
+    if (!buf.FindFile(Tablename+".tab")) {
+        ErrorInfo = NO_SUCH_TABLE;
+        return NULL;
+    }
     table = blocks[buf.FindBlockinBuffer(Tablename+".tab",i)].content;
     int pos1 = table.find(' ',0);
     int pos2 = table.find(' ',pos1+1);
@@ -200,6 +205,7 @@ int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrn
             string filename = tab.Attr[i].indexname+".idx";
             PrepareForIndex(tab.getName()+".rec",filename,i,tab);
 
+			cout << tab.Attr[i].type<<" "<< filename<<endl;
             BT.CreateIndex(&filename,tab.Attr[i].type);
             break;
         }
