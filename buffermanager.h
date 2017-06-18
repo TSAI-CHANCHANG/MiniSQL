@@ -1,12 +1,10 @@
 #ifndef BUFFERMANAGER_H
 #define BUFFERMANAGER_H
-
+#include "defination.h"
 #include<string>
 #include<time.h>
 
-const int BLOCKSIZE = 4096;
-const int BYTESIZE = 8;
-const int BLOCKNUMBER = 10;
+
 
 using namespace std;
 
@@ -22,6 +20,7 @@ public:
     int fileoffset;//对应在文件中的第几个block
     int usedsize;//已经使用的size
     char content[BLOCKSIZE+1];
+
 
     void ClearBlock();
     //将这个块恢复初始化状态
@@ -40,6 +39,8 @@ public:
     buffermanager();
     ~buffermanager();
 
+    short ErrorInfo;
+
     int FindBlockinBuffer(string fileName, int offset);
     //在buffer中找一个块（没有就从文件中放到buffer里，返回这是第几个buffer block）
     //约定三种文件后缀，table是.tab，index是.idx，catlog是.cat
@@ -47,10 +48,11 @@ public:
     char* GetDetail(int blocknum, int blockoffset);
     //给出blocknum和blockoffset，得到对应的指针
 
-    int FindSuitBlockinBuffer(string fileName, int size);
-    //给出文件名和需要插入的数据大小，返回一个足够在末端插入这个数据量的块
+    void FindSuitBlockinBuffer(string fileName, int size, int* blocknum, int * blockoffset);
+    //给出文件名和需要插入的数据大小，返回一个足够在末端插入这个数据量的块和可以插入的offset
+    //返回值是后面两个指针
 
-    void DeleteFile(string filename);
+    int DeleteFile(string filename);
     //drop表或者索引的时候用，将文件删除（同时删除内存中的缓冲区）
 
     bool FindFile(string filename);
@@ -62,17 +64,19 @@ public:
     void PinBlock(int blocknum);
     //将一个block固定住，设为不能修改
 
-    void Insert(int blocknum, char* data);
+    int Insert(int blocknum, int offset, char* data);
     //在编号为blocknum的块最后插入data
 
-    void Delete(int blocknum, int blockoffset, int size);
+    int Delete(int blocknum, int blockoffset, int size);
     //从编号为blocknum的块里第offset的位置起删掉大小为size的数据
 
+    int GetPosition(int blocknum);
+
 private:
-    void WriteBack(int blocknum);
+    int WriteBack(int blocknum);
     //将一个块写回文件中
 
-    void WriteIn(string fileName, int offset, int blocknum);
+    int WriteIn(string fileName, int offset, int blocknum);
     //将文件中的一个块读入buffer中的一块
 
     int GetAnEmptyBlock();
