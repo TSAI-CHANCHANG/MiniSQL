@@ -141,12 +141,21 @@ private:
     BPLUSTREE &bPlusTree;
 
     string generateInsertValues(string rawValues, vector<IndexInfo> &indexInfos);
-    void checkTuple(const string tuplesFile, vector<Range *> &ranges);
-    void checkTupleInBuffer(vector<Range *> &ranges);
+    string projectTuple(string tuple, vector<string> &values);
+
+    void checkSelectTuple(vector<Range *> &ranges, vector<string> &attributes);
+    void checkSelectTupleInBuffer(vector<Range *> &ranges, vector<string> &attributes);
+
+    void checkDeleteTuple(vector<Range *> &ranges);
+    void checkDeleteTupleInBuffer(vector<Range *> &ranges);
+
     bool inIntRange(IntRange *range, int val);
     bool inFloatRange(FloatRange *range, float val);
     bool inStringRange(StringRange *range, string val);
+
     bool checkInRange(vector<Range *> &ranges, map<string, string> &valueOfAttr);
+    bool updateRange(Range *range, Restrict *restrict); // TODO: be private
+
     vector<Restrict *> parseWhere(string rawWhereClause = nullptr);
     vector<Range *> generateRange(const vector<Restrict *> &restricts);
 
@@ -154,9 +163,8 @@ public:
     RecordManager(const string tableName, catalogmanager &catalogMgr, buffermanager &bufferMgr, BPLUSTREE &bPlusTree)
             : tableName(tableName), catalogMgr(catalogMgr), bufferMgr(bufferMgr), bPlusTree(bPlusTree) {}
 
-    bool updateRange(Range *range, Restrict *restrict); // TODO: be private
     bool insertRecord(string rawValues);
-    bool selectRecords(vector<string> attributes, string rawWhereClause);
+    bool selectRecords(vector<string> &attributes, string rawWhereClause);
     bool deleteRecords(string rawWhereClause);
 };
 

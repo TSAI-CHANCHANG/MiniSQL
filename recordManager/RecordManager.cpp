@@ -148,7 +148,77 @@ string RecordManager::generateInsertValues(string rawValues, vector<IndexInfo> &
     return resultRecord;
 }
 
-bool RecordManager::selectRecords(vector<string> attributes, string rawWhereClause) {
+bool RecordManager::selectRecords(vector<string> &attributes, string rawWhereClause) {
+    tableInfo = catalogMgr.GetTable(tableName); // TODO: no such table???
+
+    if (rawWhereClause.empty()) {
+        int blockNum = bufferMgr.FindBlockinBuffer(tableName + ".rec", 0);
+#if DEBUG_IT
+        cout << blocks[blockNum].content;
+#endif
+        char *pos = blocks[blockNum].content;
+        istrstream tuplesStrIn(pos);
+        string tuple;
+        while (getline(tuplesStrIn, tuple)) {
+            if (tuple[0] == ' ') {
+                continue;
+            }
+            cout << projectTuple(tuple, attributes);
+            cout << endl;
+        }
+    } else {
+        vector<Restrict *> restricts = parseWhere(rawWhereClause); // TODO: 记得delete掉
+        vector<Range *> ranges = generateRange(restricts);
+
+        for (Range *range : ranges) {
+#if DEBUG_IT
+            cout << "Range output: ";
+            cout << range->type << " " << range->attrName << " " << range->valid << endl;
+#endif
+            vector<Attribute>::iterator attrIter = find_if(tableInfo.Attr.begin(), tableInfo.Attr.end(), [range](Attribute attr) {
+                return (attr.attrname == range->attrName && attr.indexname != "noindex");
+            });
+            if (attrIter != tableInfo.Attr.end()) {
+                // find in index
+                string indexFile = (*attrIter).indexname + ".idx";
+                switch (range->type) {
+                    case int_t: {
+                        IntRange *intRange = static_cast<IntRange *>(range);
+                        // TODO: parameter adjustment, and min, max include specify
+                        string minValStr = to_string(intRange->minValue);
+                        string maxValStr = to_string(intRange->maxValue);
+#if 0
+                        cout << "Range: " << intRange->minValue << intRange->maxValue << endl;
+#endif
+                        bPlusTree.Find(range->type, &indexFile, &minValStr, &maxValStr, !(intRange->includeMin), !(intRange->includeMax));
+                        break;
+                    }
+                    case float_t: {
+                        FloatRange *floatRange = static_cast<FloatRange *>(range);
+                        string minValStr = to_string(floatRange->minValue);
+                        string maxValStr = to_string(floatRange->maxValue);
+                        bPlusTree.Find(range->type, &indexFile, &minValStr, &maxValStr, !(floatRange->includeMin), !(floatRange->includeMax));
+                        break;
+                    }
+                    case char_t: {
+                        StringRange *stringRange = static_cast<StringRange *>(range);
+                        // TODO: string 该如何定
+                        if (stringRange->value != "")
+                            bPlusTree.Find(range->type, &indexFile, &stringRange->value, &stringRange->value, false, false);
+                        break;
+                    }
+                    default:
+                        break; // only check one index
+                }
+                checkSelectTuple(ranges, attributes);
+                break;
+            } else {
+                // TODO: no index
+                checkSelectTupleInBuffer(ranges, attributes);
+                break;
+            }
+        }
+    }
 
     return true;
 }
@@ -159,7 +229,7 @@ bool RecordManager::deleteRecords(string rawWhereClause = "") {
 
     if (rawWhereClause.empty()) {
         // TODO: simple fetch all
-        buffermanager bufferMgr;
+//        buffermanager bufferMgr;
         int blockNum = bufferMgr.FindBlockinBuffer(tableName + ".rec", 0); // TODO: fetch all block, connect with catalog
 #if DEBUG_IT
         cout << blocks[blockNum].content;
@@ -234,11 +304,11 @@ bool RecordManager::deleteRecords(string rawWhereClause = "") {
                     default:
                         break; // only check one index
                 }
-                checkTuple(indexFile, ranges);
+                checkDeleteTuple(ranges);
                 break;
             } else {
                 // TODO: no index
-                checkTupleInBuffer(ranges);
+                checkDeleteTupleInBuffer(ranges);
                 break;
             }
         }
@@ -647,7 +717,7 @@ bool RecordManager::updateRange(Range *range, Restrict *restrict) {
     return true;
 }
 
-void RecordManager::checkTuple(const string tuplesFile, vector<Range *> &ranges) {
+void RecordManager::checkDeleteTuple(vector<Range *> &ranges) {
     const string file = "select.tmp";
     std::ifstream posFileStream(file);
     if (!posFileStream.is_open()) {
@@ -822,7 +892,7 @@ bool RecordManager::checkInRange(vector<Range *> &ranges, map<string, string> &v
     return true;
 }
 
-void RecordManager::checkTupleInBuffer(vector<Range *> &ranges) {
+void RecordManager::checkDeleteTupleInBuffer(vector<Range *> &ranges) {
     int blockNum = bufferMgr.FindBlockinBuffer(tableName + ".rec", 0);
     char *tuplePos = bufferMgr.GetDetail(blockNum, 0);
     istrstream allTupleStrIn(tuplePos);
@@ -872,5 +942,85 @@ void RecordManager::checkTupleInBuffer(vector<Range *> &ranges) {
         string str = keys.first + ".idx";
         bPlusTree.Delete(keys.second.type, &str, keys.second.keys);
     }
+}
+
+string RecordManager::projectTuple(string tuple, vector<string> &values) {
+    if (values.size() == 1 && values[0] == "*") {
+        return tuple;
+    }
+
+    string result;
+
+    istrstream tupleStrIn(tuple.c_str());
+    map<string, string> valueOfAttr;
+    for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+        string value;
+        tupleStrIn >> value;
+        valueOfAttr.insert(pair<string, string>(attrIter->attrname, value));
+    }
+
+    for (auto valueIter = values.begin(); valueIter != values.end(); valueIter++) {
+        result += valueOfAttr.find(*valueIter)->second;
+        result += " ";
+    }
+
+    return result;
+}
+
+void RecordManager::checkSelectTuple(vector<Range *> &ranges, vector<string> &attributes) {
+    const string file = "select.tmp";
+    std::ifstream posFileStream(file);
+    if (!posFileStream.is_open()) {
+        std::cout << "failed to open " << file << '\n';
+    } else {
+        int blockNumInFile, blockOffsetInFile;
+
+        while (posFileStream >> blockNumInFile >> blockOffsetInFile) {
+#if DEBUG_IT
+            cout << blockNumInFile << " " << blockOffsetInFile << endl;
+#endif
+            int blockNum;
+            blockNum = bufferMgr.FindBlockinBuffer(tableInfo.getName() + ".rec", blockNumInFile);
+            char *tuplePos = bufferMgr.GetDetail(blockNum, blockOffsetInFile);
+            char *newLineChar = strchr(tuplePos, '\n');
+            int size = newLineChar - tuplePos;
+            string tuple;
+            tuple.assign(tuplePos, size);
+#if DEBUG_IT
+            cout << "Tuple: " << tuple << endl;
+#endif
+            istrstream tupleStrIn(tuplePos);
+#if 0
+            cout << "Tuple size: " << size << endl;
+#endif
+
+#if DEBUG_IT
+//            cout << "Tuple: " << tuplePos << endl;
+//            cout << "Tuple stream: " << tupleStrIn.str();
+#endif
+            map<string, string> valueOfAttr;
+            for (auto attrIter = tableInfo.Attr.begin(); attrIter != tableInfo.Attr.end(); attrIter++) {
+                string value;
+                tupleStrIn >> value;
+                valueOfAttr.insert(pair<string, string>(attrIter->attrname, value));
+            }
+
+#if DEBUG_IT
+//            cout << "Map Values:" << endl;
+//            for (auto iter = valueOfAttr.begin(); iter != valueOfAttr.end(); iter++) {
+//                cout << iter->first << ": " << iter->second << endl;
+//            }
+#endif
+
+            if (checkInRange(ranges, valueOfAttr)) {
+                cout << projectTuple(tuple, attributes);
+                cout << endl;
+            }
+        }
+    }
+}
+
+void RecordManager::checkSelectTupleInBuffer(vector<Range *> &ranges, vector<string> &attributes) {
+    // TODO: checkSelectTuple directly...
 }
 
