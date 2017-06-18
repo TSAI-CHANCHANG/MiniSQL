@@ -342,7 +342,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 
 	//step5
 	end = SQLSentence.find("values", SQLCurrentPointer);
-	while (SQLSentence[end] != ' ' && SQLSentence[end] != ';')
+	while (SQLSentence[end] != ' ' && SQLSentence[end] != ';' && SQLSentence[end] != '(')
 		++end;
 	if (SQLSentence[end] == ';')
 	{
@@ -468,7 +468,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		//step7.a
 		++SQLCurrentPointer;
 		--end;
-		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
 		SQLCondition.setAttribute(currentWord);
 		return CREATE_TABLE;
 	}
@@ -649,6 +649,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 	if (end == -1)
 	{
 		end = SQLSentence.find(';', 0);
+		--end;
 		while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)
 			--end;
 		while (SQLSentence[SQLCurrentPointer] == ' ' && end > SQLCurrentPointer)
@@ -672,7 +673,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 			return ERROR;
 		}
 		SQLCondition.setTableName(currentWord);
-		SQLCondition.setWhereClause("*");
+		SQLCondition.setWhereClause("");
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;//end
 		return DELETE;
@@ -728,13 +729,25 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	if (SQLSentence.empty() && fileReadFlag == 1)//the sentence is empty and now it is time to read file
 	{
 		getline(ifs, SQLSentence);
-		if (SQLSentence.empty())//the file has come to end, but doesn't have a quit command;
+		if (ifs.eof())//the file has come to end, but doesn't have a quit command;
 		{
 			cout << "ERROR! This file doesn't have a quit command\n" << endl;
 			fileReadFlag = 0;//back to keyboard input
 			SQLSentence = "";
 			ifs.close();
 			return QUIT_NUMBER;
+		}
+		while (SQLSentence.empty())
+		{
+			getline(ifs, SQLSentence);
+			if (ifs.eof())//the file has come to end, but doesn't have a quit command;
+			{
+				cout << "ERROR! This file doesn't have a quit command\n" << endl;
+				fileReadFlag = 0;//back to keyboard input
+				SQLSentence = "";
+				ifs.close();
+				return QUIT_NUMBER;
+			}
 		}
 		cout << SQLSentence << endl;
 	}

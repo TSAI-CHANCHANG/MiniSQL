@@ -9,9 +9,9 @@
 
 using namespace std;
 
-void API(condition &SQLCondition, BPLUSTREE &BTree)
+void API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
 {
-	buffermanager bufManager;
+	
 	catalogmanager catalogManager(bufManager);
 	RecordManager recordManager(SQLCondition.showTableName(), catalogManager, bufManager, BTree);
 	int instruction;
@@ -46,6 +46,7 @@ void API(condition &SQLCondition, BPLUSTREE &BTree)
 extern block blocks[BLOCKNUMBER];
 int main(int argc, char *argv[]) // this is just a test main function
 {
+	buffermanager bufManager;
 	BPLUSTREE BTree(BLOCKSIZE);
 	string SQLSentence;
 	condition SQLCondition;
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) // this is just a test main function
 			SQLCondition.clearClass();
 			continue;
 		}
-		API(SQLCondition, BTree);
+		API(SQLCondition, BTree, bufManager);
 
 		SQLCondition.clearClass();
 	}
