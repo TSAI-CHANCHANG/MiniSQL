@@ -120,10 +120,12 @@ int BPLUSTREE::CreateIndex(string *file_name, int type) {
 int BPLUSTREE::DropIndex(string *file_name, int type) {
     string cmd, filen;
 
-    cmd = "DEL " + *file_name;
-    system(cmd.c_str());
-    cmd = "rename allindex.idx all.idx";
-    system(cmd.c_str());
+//    cmd = "DEL " + *file_name;
+//    system(cmd.c_str());
+    remove((*file_name).c_str());
+//    cmd = "rename allindex.idx all.idx";
+//    system(cmd.c_str());
+    rename("allindex.idx", "all.idx");
 
     ifstream old("all.idx");
     ofstream file("allindex.idx");
@@ -138,8 +140,9 @@ int BPLUSTREE::DropIndex(string *file_name, int type) {
     }
     old.close();
     file.close();
-    cmd = "DEL all.idx";
-    system(cmd.c_str());
+//    cmd = "DEL all.idx";
+//    system(cmd.c_str());
+    remove("all.idx");
     if (type == TYPE_INT)
         int_map.erase(*file_name);
     else if (type == TYPE_FLOAT)
@@ -168,7 +171,7 @@ int BPLUSTREE::Insert(int type, string *file_name, string *skey, int block, int 
 
 int BPLUSTREE::Delete(int type, string *file_name, vector<string> &deleted) {//1 for open; 0 for close
     stringstream skey;
-    string cmd;
+//    string cmd;
 
 //	cmd = "rename " + *file_name + " old.idx";
 //	system(cmd.c_str());
@@ -235,8 +238,9 @@ int BPLUSTREE::Delete(int type, string *file_name, vector<string> &deleted) {//1
         }
         old.close();
         updated.close();
-        cmd = "del old.idx";
-        system(cmd.c_str());
+//        cmd = "del old.idx";
+//        system(cmd.c_str());
+        remove("old.idx");
         float_map.erase(*file_name);
         if (CreateTree(type, file_name) == SUCCESS)
             return SUCCESS;
@@ -267,8 +271,9 @@ int BPLUSTREE::Delete(int type, string *file_name, vector<string> &deleted) {//1
         }
         old.close();
         updated.close();
-        cmd = "del old.idx";
-        system(cmd.c_str());
+//        cmd = "del old.idx";
+//        system(cmd.c_str());
+        remove("old.idx");
         char_map.erase(*file_name);
         if (CreateTree(type, file_name) == SUCCESS)
             return SUCCESS;
@@ -293,8 +298,8 @@ int BPLUSTREE::Find(int type, string *file_name, string *lbound, string *rbound,
         //No result
         if (lb > rb || (lb == rb && (lopen || ropen))) return SUCCESS;
         p = int_map[*file_name];
-		if (p->key.size() == 0 && p->pointer.size() == 0)
-			return SUCCESS;
+        if (p->key.size() == 0 && p->pointer.size() == 0)
+            return SUCCESS;
         li = 0;
         left = right = NULL;
         //Find the left node
@@ -385,8 +390,7 @@ int BPLUSTREE::Find(int type, string *file_name, string *lbound, string *rbound,
             }
         }
         tmp.close();
-    } 
-	else if (type == TYPE_FLOAT) {
+    } else if (type == TYPE_FLOAT) {
         FLOATNODE *p, *left, *right;
         float lb, rb;
         int li, ri, i;
@@ -396,8 +400,8 @@ int BPLUSTREE::Find(int type, string *file_name, string *lbound, string *rbound,
         //No result
         if (lb > rb || (lb == rb && (lopen || ropen))) return SUCCESS;
         p = float_map[*file_name];
-		if (p->key.size() == 0 && p->pointer.size() == 0)
-			return SUCCESS;
+        if (p->key.size() == 0 && p->pointer.size() == 0)
+            return SUCCESS;
         li = 0;
         left = right = NULL;
         //Find the left node
@@ -488,8 +492,7 @@ int BPLUSTREE::Find(int type, string *file_name, string *lbound, string *rbound,
             }
         }
         tmp.close();
-    } 
-	else if (type == TYPE_CHAR) {
+    } else if (type == TYPE_CHAR) {
         CHARNODE *p, *left, *right;
         string lb, rb;
         int li, ri, i;
@@ -499,8 +502,8 @@ int BPLUSTREE::Find(int type, string *file_name, string *lbound, string *rbound,
         //No result
         if (lb > rb || (lb == rb && (lopen || ropen))) return SUCCESS;
         p = char_map[*file_name];
-		if (p->key.size() == 0 && p->pointer.size() == 0)
-			return SUCCESS;
+        if (p->key.size() == 0 && p->pointer.size() == 0)
+            return SUCCESS;
         li = 0;
         left = right = NULL;
         //Find the left node
@@ -1134,9 +1137,10 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         p->block.erase(p->block.begin() + i);
         p->offset.erase(p->offset.begin() + i);
 
-        string cmd;
-        cmd = "rename " + *file_name + " temp.idx";
-        system(cmd.c_str());
+//        string cmd;
+//        cmd = "rename " + *file_name + " temp.idx";
+//        system(cmd.c_str());
+        rename(file_name->c_str(), "temp.idx");
         ifstream old("temp.idx");
         ofstream nfile(*file_name);
         int toffset, tkey, tblock;
@@ -1150,8 +1154,9 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         }
         old.close();
         nfile.close();
-        cmd = "del temp.idx";
-        system(cmd.c_str());
+//        cmd = "del temp.idx";
+//        system(cmd.c_str());
+        remove("temp.idx");
         if (p->key.size() >= degree / 2 || p == root)
             goto end;
         //Adjust B+ tree
@@ -1297,9 +1302,10 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         p->block.erase(p->block.begin() + i);
         p->offset.erase(p->offset.begin() + i);
 
-        string cmd;
-        cmd = "rename " + *file_name + " temp.idx";
-        system(cmd.c_str());
+//        string cmd;
+//        cmd = "rename " + *file_name + " temp.idx";
+//        system(cmd.c_str());
+        rename(file_name->c_str(), "temp.idx");
         ifstream old("temp.idx");
         ofstream nfile(*file_name);
         int toffset, tblock;
@@ -1314,8 +1320,9 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         }
         old.close();
         nfile.close();
-        cmd = "del temp.idx";
-        system(cmd.c_str());
+//        cmd = "del temp.idx";
+//        system(cmd.c_str());
+        remove("temp.idx");
         if (p->key.size() >= degree / 2 || p == root)
             goto end;
         //Adjust B+ tree
@@ -1461,9 +1468,10 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         p->block.erase(p->block.begin() + i);
         p->offset.erase(p->offset.begin() + i);
 
-        string cmd;
-        cmd = "rename " + *file_name + " temp.idx";
-        system(cmd.c_str());
+//        string cmd;
+//        cmd = "rename " + *file_name + " temp.idx";
+//        system(cmd.c_str());
+        rename(file_name->c_str(), "temp.idx");
         ifstream old("temp.idx");
         ofstream nfile(*file_name);
         int toffset, tblock;
@@ -1478,8 +1486,9 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         }
         old.close();
         nfile.close();
-        cmd = "del temp.idx";
-        system(cmd.c_str());
+//        cmd = "del temp.idx";
+//        system(cmd.c_str());
+        remove("temp.idx");
         if (p->key.size() >= degree / 2 || p == root)
             goto end;
         //Adjust B+ tree

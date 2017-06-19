@@ -18,27 +18,35 @@ void API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
 	instruction = SQLCondition.showInstruction();
 	switch (instruction)
 	{
-	case INSERT:
+	case INSERT: {
 		recordManager.insertRecord(SQLCondition.showInsertValues());
 		break;
-	case SELECT:
-		recordManager.selectRecords(SQLCondition.showColName(), SQLCondition.showWhereClause());
+	}
+	case SELECT: {
+		vector<string> attrs = SQLCondition.showColName();
+		recordManager.selectRecords(attrs, SQLCondition.showWhereClause());
 		break;
-	case DELETE:
+	}
+	case DELETE: {
 		recordManager.deleteRecords(SQLCondition.showWhereClause());
 		break;
-	case CREATE_TABLE:
+	}
+	case CREATE_TABLE: {
 		catalogManager.CreateTable(SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
 		break;
-	case CREATE_INDEX:
+    }
+	case CREATE_INDEX: {
 		catalogManager.CreateIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
 		break;
-	case DROP_TABLE:
+    }
+	case DROP_TABLE: {
 		catalogManager.DropTable(SQLCondition.showTableName(), BTree);
 		break;
-	case DROP_INDEX:
+    }
+	case DROP_INDEX: {
 		catalogManager.DropIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), BTree);
 		break;
+    }
 	default:
 		break;
 	}

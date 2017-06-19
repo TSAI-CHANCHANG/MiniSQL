@@ -977,7 +977,7 @@ string RecordManager::projectTuple(string tuple, vector<string> &values) {
 	}
 
 	for (auto valueIter = values.begin(); valueIter != values.end(); valueIter++) {
-		result += valueOfAttr.find(*valueIter)->second;
+		result += valueOfAttr.find(*valueIter)->second; // TODO: verify the value attrs
 		result += " ";
 	}
 
