@@ -1,6 +1,6 @@
 #include "Interpreter.h"
 #include <iostream>
-#include <string>
+#include <string.h>
 #include <fstream>
 #include <vector>
 
@@ -342,7 +342,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 
 	//step5
 	end = SQLSentence.find("values", SQLCurrentPointer);
-	while (SQLSentence[end] != ' ' && SQLSentence[end] != ';')
+	while (SQLSentence[end] != ' ' && SQLSentence[end] != ';' && SQLSentence[end] != '(')
 		++end;
 	if (SQLSentence[end] == ';')
 	{
@@ -381,7 +381,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	}
 	++SQLCurrentPointer;
 	--end;
-	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
 	SQLCondition.setInsertValues(currentWord);
 	//step7,end
 	end = SQLSentence.find(';', SQLCurrentPointer);
@@ -468,7 +468,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		//step7.a
 		++SQLCurrentPointer;
 		--end;
-		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
+		currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer + 1);
 		SQLCondition.setAttribute(currentWord);
 		return CREATE_TABLE;
 	}
@@ -586,7 +586,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find(')', SQLCurrentPointer);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key symbol '£©'." << endl;
+			cout << "Error! Can not find key symbol 'ï¼‰'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -649,6 +649,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 	if (end == -1)
 	{
 		end = SQLSentence.find(';', 0);
+		--end;
 		while (SQLSentence[end] == ' ' && end > SQLCurrentPointer)
 			--end;
 		while (SQLSentence[SQLCurrentPointer] == ' ' && end > SQLCurrentPointer)
@@ -672,7 +673,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 			return ERROR;
 		}
 		SQLCondition.setTableName(currentWord);
-		SQLCondition.setWhereClause("*");
+		SQLCondition.setWhereClause("");
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;//end
 		return DELETE;
@@ -717,7 +718,86 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 	SQLCurrentPointer = end;
 	return SELECT;
 }
-int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
+
+/////////////////////////////////////////////////
+/////Function No. 6:
+/////
+int execute_clause(string &fileName, condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
+{
+	std::ifstream file((fileName).c_str());
+	if (!file)
+		std::cout << "Error! File does not exist" << std::endl;
+	else
+	{
+		std::string buf;
+		while (getline(file, buf))
+		{
+			while (buf.empty())
+			{
+				getline(file, buf);
+				if (file.eof())
+				{
+					return QUIT_NUMBER;
+				}
+			}
+			int len = buf.size();
+			while (len && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+			{
+				--len;
+			}
+			interpreter(buf, SQLCondition, BTree, bufManager);
+			SQLCondition.clearClass();
+		}
+	}
+	return EXEC;
+}
+
+extern block blocks[BLOCKNUMBER];
+
+void API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
+{
+
+	catalogmanager catalogManager(bufManager);
+	RecordManager recordManager(SQLCondition.showTableName(), catalogManager, bufManager, BTree);
+	int instruction;
+	instruction = SQLCondition.showInstruction();
+	switch (instruction)
+	{
+	case INSERT: {
+		recordManager.insertRecord(SQLCondition.showInsertValues());
+		break;
+	}
+	case SELECT: {
+		vector<string> attrs = SQLCondition.showColName();
+		recordManager.selectRecords(attrs, SQLCondition.showWhereClause());
+		break;
+	}
+	case DELETE: {
+		recordManager.deleteRecords(SQLCondition.showWhereClause());
+		break;
+	}
+	case CREATE_TABLE: {
+		catalogManager.CreateTable(SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
+		break;
+	}
+	case CREATE_INDEX: {
+		catalogManager.CreateIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
+		break;
+	}
+	case DROP_TABLE: {
+		catalogManager.DropTable(SQLCondition.showTableName(), BTree);
+		break;
+	}
+	case DROP_INDEX: {
+		catalogManager.DropIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), BTree);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+int interpreter(string &SQLSentence, condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
 {
 	string firstWord;
 	int SQLCurrentPointer = 0, end = 0;
@@ -725,20 +805,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 
 
 	//////////////////////input part/////////////////////////////////////////////
-	if (SQLSentence.empty() && fileReadFlag == 1)//the sentence is empty and now it is time to read file
-	{
-		getline(ifs, SQLSentence);
-		if (SQLSentence.empty())//the file has come to end, but doesn't have a quit command;
-		{
-			cout << "ERROR! This file doesn't have a quit command\n" << endl;
-			fileReadFlag = 0;//back to keyboard input
-			SQLSentence = "";
-			ifs.close();
-			return QUIT_NUMBER;
-		}
-		cout << SQLSentence << endl;
-	}
-	else if(SQLSentence.empty())
+	if(SQLSentence.empty())
 		SQLSentence = getInput();
 	//////////////////////instruction analysis part//////////////////////////////////
 
@@ -793,16 +860,9 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 		end = SQLSentence.find(' ', SQLCurrentPointer);
 		temp = SQLSentence.substr(SQLCurrentPointer + 1, end - SQLCurrentPointer - 2);
 		strcpy(address, temp.c_str());//copy the address to array
-		if (freopen(address, "r", stdin) == 0)//can not open
-		{
-			cout << "The file " << address << " was not opened\n";
-		}  
-		else
-		{
-			cout << "The file " << address << " was opened\n";
-			fileReadFlag = 1;
-			ifs.open(address);
-		}
+		execute_clause(temp, SQLCondition, BTree, bufManager);
+
+
 		SQLCurrentPointer = end;
 	}
 	else if (firstWord == "drop")
@@ -828,6 +888,7 @@ int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition)
 	}
 	end = SQLSentence.find(';', 0);
 	SQLSentence.erase(0, end + 1);//clear
+	API(SQLCondition, BTree, bufManager);
 	return code;
 }
 
