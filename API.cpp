@@ -1,6 +1,7 @@
 #include "Interpreter.h"
 #include "buffermanager.h"
 #include "catalogmanager.h"
+#include "RecordManager.h"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -8,34 +9,11 @@
 
 using namespace std;
 
-void API(condition &SQLCondition, buffermanager &bufManager)
-{
-	catalogmanager catalogManager(bufManager);
-	BPLUSTREE BTree(BLOCKSIZE);
-	int instruction;
-	instruction = SQLCondition.showInstruction();
-	switch (instruction)
-	{
-	case CREATE_TABLE:
-		catalogManager.CreateTable(SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
-		break;
-	case CREATE_INDEX:
-		catalogManager.CreateIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
-		break;
-	case DROP_TABLE:
-		catalogManager.DropTable(SQLCondition.showTableName(), BTree);
-		break;
-	case DROP_INDEX:
-		catalogManager.DropIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), BTree);
-		break;
-	default:
-		break;
-	}
-}
 
 int main(int argc, char *argv[]) // this is just a test main function
 {
 	buffermanager bufManager;
+	BPLUSTREE BTree(BLOCKSIZE);
 	string SQLSentence;
 	condition SQLCondition;
 	int conditionCode = 0;
@@ -43,7 +21,7 @@ int main(int argc, char *argv[]) // this is just a test main function
 	int fileReadFlag = 0;
 	while (!stop)
 	{
-		conditionCode = interpreter(SQLSentence, fileReadFlag, SQLCondition);
+		conditionCode = interpreter(SQLSentence, SQLCondition, BTree, bufManager);
 		if (conditionCode == QUIT_NUMBER)
 		{
 			stop = 1;
@@ -54,8 +32,8 @@ int main(int argc, char *argv[]) // this is just a test main function
 			SQLCondition.clearClass();
 			continue;
 		}
-		API(SQLCondition, bufManager);
-
+		
+		
 		SQLCondition.clearClass();
 	}
 	cout << "Press Any Key to Continue..." << endl;
