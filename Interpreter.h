@@ -1,4 +1,8 @@
 #pragma once
+#include "Interpreter.h"
+#include "buffermanager.h"
+#include "catalogmanager.h"
+#include "RecordManager.h"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -19,6 +23,7 @@ using namespace std;
 #define CREATE_TABLE 10009
 #define CREATE_INDEX 10010
 #define DELETE       10011
+#define EXEC         10012
 string getInput();
 
 class condition
@@ -65,4 +70,5 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition);
 int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition);
 int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition);
-int interpreter(string &SQLSentence, int &fileReadFlag, condition &SQLCondition);
+int interpreter(string &SQLSentence, condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager);
+void API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager);
