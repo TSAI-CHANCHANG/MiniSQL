@@ -60,7 +60,7 @@ int buffermanager::WriteBack(int blocknum)
     fstream File(filename);
     if (!File)
     {
-        cout<<"File Open Failure!"<<endl;
+		cerr << "ERROR:" << "File Open Failure!"<<endl;
         return FILE_ERROR;
     }
 
@@ -104,7 +104,7 @@ int buffermanager::WriteIn(string fileName, int offset, int blocknum)
     ifstream File(filename, std::ios::in|ios::app);
     if (!File.is_open())
     {
-        cout<<"File Open Failure!"<<endl;
+		cerr << "ERROR:" << "File Open Failure!"<<endl;
         return FILE_ERROR;
     }
 
@@ -318,7 +318,7 @@ int buffermanager::Insert(int blocknum, int offset, char* data)
 	
     if (strlen(data)+blocks[blocknum].usedsize>BLOCKSIZE)
     {
-        cout<<"TOO LARGE TO FIT IN!"<<endl;
+		cerr << "ERROR:" << "TOO LARGE TO FIT IN!"<<endl;
         return BLOCK_INSERTION_FAILURE;
     }
 
@@ -340,7 +340,7 @@ int buffermanager::Delete(int blocknum, int blockoffset, int size)
 {
     if (blockoffset+size>BLOCKSIZE)
     {
-        cout<<"TOO LARGE TO DELETE"<<endl;
+		cerr << "ERROR:" << "TOO LARGE TO DELETE"<<endl;
         return BLOCK_DELETION_FAILURE;
     }
 

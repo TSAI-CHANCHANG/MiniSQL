@@ -52,7 +52,7 @@ int catalogmanager::DropTable(string Tablename, BPLUSTREE& BT)
 {
     if (!buf.FindFile(Tablename+".tab")){
         //如果没有这个表，报错
-        cout<<"No Such Table"<<endl;
+		cerr << "ERROR:" << "No Such Table"<<endl;
         return NO_SUCH_TABLE;
     }
     Table tab = GetTable(Tablename);//先找到这个表
@@ -73,7 +73,7 @@ int catalogmanager::DropTable(string Tablename, BPLUSTREE& BT)
 int catalogmanager::DropIndex(string Indexname, string Tablename, BPLUSTREE& BT)
 {
     if (!buf.FindFile(Tablename+".tab")){
-        cout<<"No Such Table"<<endl;
+		cerr << "ERROR:" << "No Such Table"<<endl;
         return NO_SUCH_TABLE;
     }
     Table tab = GetTable(Tablename);//找到这个index对应的表
@@ -87,7 +87,7 @@ int catalogmanager::DropIndex(string Indexname, string Tablename, BPLUSTREE& BT)
             break;
         }
     if (i==tab.Attrnum){
-        cout<<"No Such Index"<<endl;
+		cerr << "ERROR:" << "No Such Index"<<endl;
         return NO_SUCH_INDEX;
     }
 
@@ -183,7 +183,7 @@ void catalogmanager::PrepareForIndex(string FromFile, string ToFile, int tpnum, 
 int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrname, BPLUSTREE& BT)
 {
     if (!buf.FindFile(Tablename+".tab")){
-        cout<<"No Such Table"<<endl;
+		cerr << "ERROR:" << "No Such Table"<<endl;
         return NO_SUCH_TABLE;
     }
     Table tab = GetTable(Tablename);//要建立index，先找到对应的表
@@ -193,13 +193,13 @@ int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrn
         {
             if (tab.Attr[i].indexname!="noindex")
             {
-                cout<<"Has been existed!"<<endl;
+				cerr << "ERROR:" << "Has been existed!"<<endl;
                 return HAVE_SUCH_INDEX;
             }
 
             if (!tab.Attr[i].unique)
             {
-                cout<<"It's not unique!"<<endl;
+				cerr << "ERROR:" << "It's not unique!"<<endl;
                 return CONSTRAINT_VIOLATION;
             }
 
@@ -213,7 +213,7 @@ int catalogmanager::CreateIndex(string Indexname, string Tablename, string Attrn
         }
     if (i==tab.Attrnum){
         //有这个表但没这个attribute
-        cout<<"No Such Attribute"<<endl;
+		cerr << "ERROR:" << "No Such Attribute"<<endl;
         return NO_SUCH_TABLE;
     }
 
@@ -229,7 +229,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& 
     if (buf.FindFile(Tablename+".tab"))
     {
         //这个表已经存在了
-        cout<<"Already exist!"<<endl;
+		cerr << "ERROR:" << "Already exist!"<<endl;
         return HAVE_SUCH_TABLE;
     }
     Attribute att;
@@ -260,7 +260,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& 
             if (att.primary)//如果这个属性是个primary
                 if (tab.primary!=-1)//之前已经定义过primary重复，报错
                 {
-                     cout<<"Two primary keys!"<<endl;
+					cerr << "ERROR:" << "Two primary keys!"<<endl;
                      return CONSTRAINT_DEFINATION_ERROR;
                 }
                 else
@@ -277,7 +277,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& 
         {   //单独定义的primary
             if (tab.primary!=-1) {
 
-                cout<<"Two primary keys!"<<endl;
+				cerr << "ERROR:" << "Two primary keys!"<<endl;
                 return CONSTRAINT_DEFINATION_ERROR;
             }
             pos1 = Attributes.find('(',pos1);
@@ -298,7 +298,7 @@ int catalogmanager::CreateTable(string Tablename, string Attributes, BPLUSTREE& 
             }
         if (tab.primary==-1)
         {
-            cout<<"No Such Attribute!"<<endl;
+			cerr << "ERROR:" << "No Such Attribute!"<<endl;
             return CONSTRAINT_DEFINATION_ERROR;
         }
     }
@@ -340,7 +340,7 @@ int Attribute::defAtt(string attDef)//处理表的属性定义
     while (pos1<=attDef.length()-1&&attDef[pos1]==' '||attDef[pos1]=='\n') pos1++;
     if ((pos1>attDef.length()-1)||attDef.find(' ',pos1)==-1&&attDef.find('\n',pos1)==-1)
     {
-        cout<<"Wrong Format"<<endl;
+		cerr << "ERROR:" << "Wrong Format"<<endl;
         return WRONG_DEFINATION_FORMAT;
     }
 
@@ -352,7 +352,7 @@ int Attribute::defAtt(string attDef)//处理表的属性定义
     while (pos1<=attDef.length()-1&&(attDef[pos1]==' '||attDef[pos1]=='\n')) pos1++;
     if ( (pos1>attDef.length()-1)||attDef.find(' ',pos1)==-1&&attDef.find('\n',pos1)==-1) //报错
     {
-        cout<<"Wrong Format"<<endl;
+		cerr << "ERROR:" << "Wrong Format"<<endl;
         return WRONG_DEFINATION_FORMAT;
     }
 
@@ -380,7 +380,7 @@ int Attribute::defAtt(string attDef)//处理表的属性定义
             else
             {
                 //不属于三种类型，错误
-                cout<<"Wrong Type!"<<endl;
+				cerr << "ERROR:" << "Wrong Type!"<<endl;
                 return WRONG_DEFINATION_FORMAT;
             }
 
@@ -403,7 +403,7 @@ int Attribute::defAtt(string attDef)//处理表的属性定义
     }
     else
     {
-        cout<<"Wrong Constraint!"<<endl;
+		cerr << "ERROR:" << "Wrong Constraint!"<<endl;
         this->type = -1;
         return WRONG_DEFINATION_FORMAT;
     }

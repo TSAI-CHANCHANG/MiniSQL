@@ -71,4 +71,4 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition);
 int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condition &SQLCondition);
 int interpreter(string &SQLSentence, condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager);
-void API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager);
+bool API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager);

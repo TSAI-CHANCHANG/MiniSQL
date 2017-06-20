@@ -40,7 +40,7 @@ int BPLUSTREE::CreateTree(int type, string *file_name) {
     ifstream index(*file_name);
 
     if (!index) {
-        cout << "Error: No file named " << *file_name << "!" << endl;
+        cerr << "Error: No file named " << *file_name << "!" << endl;
         return ERROR_FILE;
     }
     if (type == TYPE_INT) {
@@ -93,7 +93,7 @@ int BPLUSTREE::CreateTree(int type, string *file_name) {
         }
     } else {
         index.close();
-        cout << "Error: Type error!" << endl;
+        cerr << "Error: Type error!" << endl;
         return ERROR_UNKNOWN;
     }
     index.close();
@@ -152,7 +152,7 @@ int BPLUSTREE::DropIndex(string *file_name, int type) {
     else if (type == TYPE_CHAR)
         char_map.erase(*file_name);
     else {
-        cout << "Error: No such file!" << endl;
+        cerr << "Error: No such file!" << endl;
         return ERROR_FILE;
     }
     return SUCCESS;
@@ -598,7 +598,7 @@ int BPLUSTREE::Find(int type, string *file_name, string *lbound, string *rbound,
         }
         tmp.close();
     } else {
-        cout << "Error: No such type!" << endl;
+        cerr << "Error: No such type!" << endl;
         return ERROR_TYPE;
     }
 
@@ -1095,7 +1095,7 @@ int BPLUSTREE::AddNode(int type, string *file_name, string *skey, int block, int
             }
         }
     } else {
-        cout << "Error: No such type!" << endl;
+        cerr << "Error: No such type!" << endl;
         return ERROR_TYPE;
     }
 
@@ -1131,7 +1131,7 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         while (i < p->key.size() && p->key[i] != key)
             i++;
         if (i == p->key.size()) {
-            cout << "Error: No such turple!" << endl;
+            cerr << "Error: No such turple!" << endl;
             return ERROR_OFFSET_NOT_EXISTS;
         }
         output = to_string(p->block[i]) + " " + to_string(p->offset[i]);
@@ -1296,7 +1296,7 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         while (i < p->key.size() && p->key[i] != key)
             i++;
         if (i == p->key.size()) {
-            cout << "Error: No such turple!" << endl;
+            cerr << "Error: No such turple!" << endl;
             return ERROR_OFFSET_NOT_EXISTS;
         }
         output = to_string(p->block[i]) + " " + to_string(p->offset[i]);
@@ -1462,7 +1462,7 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
         while (i < p->key.size() && p->key[i] != key)
             i++;
         if (i == p->key.size()) {
-            cout << "Error: No such turple!" << endl;
+            cerr << "Error: No such turple!" << endl;
             return ERROR_OFFSET_NOT_EXISTS;
         }
         output = to_string(p->block[i]) + " " + to_string(p->offset[i]);
@@ -1605,7 +1605,7 @@ int BPLUSTREE::DeleteNode(int type, string *file_name, string *skey) {
             }
         }
     } else {
-        cout << "Error: Unknown!" << endl;
+        cerr << "Error: Unknown!" << endl;
         return ERROR_UNKNOWN;
     }
     end:
@@ -1625,7 +1625,7 @@ int GetDegree(int block_size, int type) {
     else if (type == TYPE_CHAR)
         type_size = 255;
     else {
-        cout << "Error: No such type!" << endl;
+        cerr << "Error: No such type!" << endl;
         return ERROR_TYPE;
     }
     degree = (block_size + type_size) / (POINTERSIZE + type_size);

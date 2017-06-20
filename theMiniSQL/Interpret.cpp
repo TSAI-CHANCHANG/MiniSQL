@@ -3,7 +3,7 @@
 #include <string.h>
 #include <fstream>
 #include <vector>
-
+#define OUT_SUCCESS 1
 static char address[1000];
 static ifstream ifs;
 using namespace std;
@@ -44,7 +44,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	//step2
 	if ((end = SQLSentence.find(" from", SQLCurrentPointer)) == -1)//find " from"
 	{
-		cout << "Error! Can not find key words \"from\"." << endl;//can not find from
+		cerr << "ERROR: " << "Can not find key words \"from\"." << endl;//can not find from
 		end = SQLSentence.find(";", SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -61,7 +61,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	//step4
 	if (currentWord.empty() == 1)//can not find col name
 	{
-		cout << "Error! Can not find col name." << endl;
+		cerr << "ERROR: " << "Can not find col name." << endl;
 		end = SQLSentence.find(";", SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -83,7 +83,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 					++e;
 				if (flag && currentWord[e] != ',')
 				{
-					cout << "Error! col name must be separated by \',\'." << endl;
+					cerr << "Error: " << "Col name must be separated by \',\'." << endl;
 					end = SQLSentence.find(";", SQLCurrentPointer);
 					SQLCurrentPointer = end;
 					return ERROR;
@@ -109,14 +109,14 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 					++e;
 				if (e + 1 == currentWord.size() && flag == 1)
 				{
-					cout << "Error! col name has syntax error." << endl;
+					cerr << "ERROR: " << "Col name has syntax error." << endl;
 					end = SQLSentence.find(";", SQLCurrentPointer);
 					SQLCurrentPointer = end;
 					return ERROR;
 				}
 				if (flag && currentWord[e] != ',')
 				{
-					cout << "Error! col name must be separated by \',\'." << endl;
+					cerr << "ERROR:" << "Col name must be separated by \',\'." << endl;
 					end = SQLSentence.find(";", SQLCurrentPointer);
 					SQLCurrentPointer = end;
 					return ERROR;
@@ -143,7 +143,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	end = SQLSentence.find(' ', SQLCurrentPointer);
 	if (end == -1)
 	{
-		cout << "Error! Can not find table name." << endl;
+		cerr << "ERROR:" << "Can not find table name." << endl;
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -161,7 +161,7 @@ int select_clause(string &SQLSentence,  int &SQLCurrentPointer, int &end, condit
 	//step9
 	if (currentWord.empty() || currentWord == "where")
 	{
-		cout << "Error! the table name can not be found" << endl;
+		cerr << "ERROR:" << "The table name can not be found" << endl;
 		end = SQLSentence.find(";", SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -206,7 +206,7 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 			++end;
 		if (SQLSentence[end] == ';')//lose table name
 		{
-			cout << "Error! can not find table name." << endl;
+			cerr << "ERROR:" << "Can not find table name." << endl;
 			SQLCurrentPointer = end;
 			return ERROR;
 		}
@@ -230,7 +230,7 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 		end = SQLSentence.find("index", SQLCurrentPointer);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key word 'table' or 'index'." << endl;
+			cerr << "ERROR:" << "Can not find key word 'table' or 'index'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -240,7 +240,7 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 		end = SQLSentence.find(" on", SQLCurrentPointer);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key word /'on'/." << endl;
+			cerr << "ERROR:" << "Can not find key word /'on'/." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -256,7 +256,7 @@ int drop_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, condition
 
 		if (currentWord.empty())
 		{
-			cout << "Error! Can not find index name." << endl;
+			cerr << "ERROR:" << "Can not find index name." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -296,7 +296,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	//step2
 	if (SQLSentence[SQLCurrentPointer] == ';')
 	{
-		cout << "Error! Can not find key word 'into'." << endl;
+		cerr << "ERROR:" << "Can not find key word 'into'." << endl;
 		end = SQLCurrentPointer;
 		return ERROR;
 	}
@@ -308,7 +308,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	currentWord = SQLSentence.substr(SQLCurrentPointer, end - SQLCurrentPointer);
 	if (currentWord != "into")
 	{
-		cout << "Error! Can not find key word 'into'." << endl;
+		cerr << "ERROR:" << "Can not find key word 'into'." << endl;
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -319,7 +319,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	end = SQLSentence.find(" values", SQLCurrentPointer);
 	if (end == -1)
 	{
-		cout << "Error! Can not find key word 'values'." << endl;
+		cerr << "ERROR:" << "Can not find key word 'values'." << endl;
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -333,7 +333,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 
 	if(currentWord.empty())
 	{
-		cout << "Error! Can not find table name." << endl;
+		cerr << "ERROR:" << "Can not find table name." << endl;
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -346,7 +346,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		++end;
 	if (SQLSentence[end] == ';')
 	{
-		cout << "Error! Can not find insert values." << endl;
+		cerr << "ERROR:" << "Can not find insert values." << endl;
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -356,7 +356,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	SQLCurrentPointer = SQLSentence.find('(');
 	if (SQLCurrentPointer == -1)
 	{
-		cout << "Error! Can not find '('." << endl;
+		cerr << "ERROR:" << "Can not find '('." << endl;
 		end = SQLSentence.find(';', 0);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -364,7 +364,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 	end = SQLSentence.find(')');
 	if (end == -1)
 	{
-		cout << "Error! Can not find ')'." << endl;
+		cerr << "ERROR:" << "Can not find ')'." << endl;
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -374,7 +374,7 @@ int insert_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		--end;
 	if (SQLSentence[SQLCurrentPointer + 1] == '(')
 	{
-		cout << "Error! the InsertValues is empty." << endl;
+		cerr << "ERROR:" << "The InsertValues is empty." << endl;
 		end = SQLSentence.find(';', SQLCurrentPointer);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -409,7 +409,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find('(', 0);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key symbol '('." << endl;
+			cerr << "ERROR:" << "Can not find key symbol '('." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -421,7 +421,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			--end;
 		if (SQLCurrentPointer == end)
 		{
-			cout << "Error! Can not find table name." << endl;
+			cerr << "ERROR:" << "Can not find table name." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -436,7 +436,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			++i;
 		if (i != currentWord.size())
 		{
-			cout << "Error! find a sytnax fault between \"table\" and '('." << endl;
+			cerr << "ERROR:" << "Find a sytnax fault between \"table\" and '('." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -450,7 +450,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			--end;
 		if (end == -1)
 		{
-			cout << "Error! Can not find key symbol ')'." << endl;
+			cerr << "ERROR:" << "Can not find key symbol ')'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -459,7 +459,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		//step6.a
 		if (end == SQLCurrentPointer + 1)
 		{
-			cout << "Error! Can not find attribute." << endl;
+			cerr << "ERROR:" << "Can not find attribute." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -478,7 +478,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find("index", 0);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key word 'table' or 'index'." << endl;
+			cerr << "ERROR:" << "Can not find key word 'table' or 'index'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -489,7 +489,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find("on", 0);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key word 'on'." << endl;
+			cerr << "ERROR:" << "Can not find key word 'on'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -508,7 +508,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			++SQLCurrentPointer;
 		if (end == SQLCurrentPointer)
 		{
-			cout << "Error! Can not find index name." << endl;
+			cerr << "ERROR:" << "Can not find index name." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -521,7 +521,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			++i;
 		if (i != currentWord.size())
 		{
-			cout << "Error! find a sytnax fault between \'index\" and \"on\"." << endl;
+			cerr << "ERROR:" << "Find a sytnax fault between \'index\" and \"on\"." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -532,7 +532,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find("on", 0);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key word 'on'." << endl;
+			cerr << "ERROR:" << "Can not find key word 'on'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -547,7 +547,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find('(', 0);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key symbol '('." << endl;
+			cerr << "ERROR:" << "Can not find key symbol '('." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -561,7 +561,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			++SQLCurrentPointer;
 		if (end == SQLCurrentPointer)
 		{
-			cout << "Error! Can not find table name." << endl;
+			cerr << "ERROR:" << "Can not find table name." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -574,7 +574,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 			++i;
 		if (i != currentWord.size())
 		{
-			cout << "Error! find a sytnax fault between \"on\" and '('." << endl;
+			cerr << "ERROR:" << "Find a sytnax fault between \"on\" and '('." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -586,7 +586,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find(')', SQLCurrentPointer);
 		if (end == -1)
 		{
-			cout << "Error! Can not find key symbol '£©'." << endl;
+			cerr << "ERROR:" << "Can not find key symbol '£©'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -595,7 +595,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		//step14.b
 		if (end == SQLCurrentPointer + 1)
 		{
-			cout << "Error! Can not find attribute." << endl;
+			cerr << "ERROR:" << "Can not find attribute." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -622,14 +622,14 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 	{
 		if (SQLSentence.find("from", 0) == -1)//can not find from
 		{
-			cout << "Error! Can not find key word 'from'." << endl;
+			cerr << "ERROR:" << "Can not find key word 'from'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
 		}
 		else
 		{
-			cout << "Error! There are some syntax error between \"delete\" and \"from\"." << endl;
+			cerr << "ERROR:" << "There are some syntax error between \"delete\" and \"from\"." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -656,7 +656,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 			++SQLCurrentPointer;
 		if (SQLCurrentPointer == end)
 		{
-			cout << "Error! Can not find table name." << endl;
+			cerr << "ERROR:" << "Can not find table name." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -667,7 +667,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 			++i;
 		if (i != currentWord.size())
 		{
-			cout << "Error! find a sytnax fault between \"from\" and ';'." << endl;
+			cerr << "ERROR:" << "Find a sytnax fault between \"from\" and ';'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -686,7 +686,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 		++SQLCurrentPointer;
 	if (SQLCurrentPointer == end)
 	{
-		cout << "Error! Can not find table name." << endl;
+		cerr << "ERROR:" << "Can not find table name." << endl;
 		end = SQLSentence.find(';', 0);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -697,7 +697,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 		++i;
 	if (i != currentWord.size())
 	{
-		cout << "Error! find a sytnax fault between \"from\" and 'where'." << endl;
+		cerr << "ERROR:" << "Find a sytnax fault between \"from\" and 'where'." << endl;
 		end = SQLSentence.find(';', 0);
 		SQLCurrentPointer = end;
 		return ERROR;
@@ -726,7 +726,7 @@ int execute_clause(string &fileName, condition &SQLCondition, BPLUSTREE &BTree, 
 {
 	std::ifstream file((fileName).c_str());
 	if (!file)
-		std::cout << "Error! File does not exist" << std::endl;
+		std::cerr << "ERROR:" << "File does not exist" << std::endl;
 	else
 	{
 		std::string buf;
@@ -754,7 +754,7 @@ int execute_clause(string &fileName, condition &SQLCondition, BPLUSTREE &BTree, 
 
 extern block blocks[BLOCKNUMBER];
 
-void API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
+bool API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
 {
 
 	catalogmanager catalogManager(bufManager);
@@ -764,32 +764,53 @@ void API(condition &SQLCondition, BPLUSTREE &BTree, buffermanager &bufManager)
 	switch (instruction)
 	{
 	case INSERT: {
-		recordManager.insertRecord(SQLCondition.showInsertValues());
+		if (recordManager.insertRecord(SQLCondition.showInsertValues()))
+			return true;
+		else
+			return false;
 		break;
 	}
 	case SELECT: {
 		vector<string> attrs = SQLCondition.showColName();
-		recordManager.selectRecords(attrs, SQLCondition.showWhereClause());
+		if (recordManager.selectRecords(attrs, SQLCondition.showWhereClause()))
+			return true;
+		else
+			return false;
 		break;
 	}
 	case DELETE: {
-		recordManager.deleteRecords(SQLCondition.showWhereClause());
+		if (recordManager.deleteRecords(SQLCondition.showWhereClause()))
+			return true;
+		else
+			return false;
 		break;
 	}
 	case CREATE_TABLE: {
-		catalogManager.CreateTable(SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
+		if (catalogManager.CreateTable(SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree) == SUCCESS)
+			return true;
+		else
+			return false;
 		break;
 	}
 	case CREATE_INDEX: {
-		catalogManager.CreateIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree);
+		if (catalogManager.CreateIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), SQLCondition.showAttribute(), BTree) == SUCCESS)
+			return true;
+		else
+			return false;
 		break;
 	}
 	case DROP_TABLE: {
-		catalogManager.DropTable(SQLCondition.showTableName(), BTree);
+		if (catalogManager.DropTable(SQLCondition.showTableName(), BTree) == SUCCESS)
+			return true;
+		else
+			return false;
 		break;
 	}
 	case DROP_INDEX: {
-		catalogManager.DropIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), BTree);
+		if (catalogManager.DropIndex(SQLCondition.showIndexName(), SQLCondition.showTableName(), BTree) == SUCCESS)
+			return true;
+		else
+			return false;
 		break;
 	}
 	default:
@@ -842,7 +863,7 @@ int interpreter(string &SQLSentence, condition &SQLCondition, BPLUSTREE &BTree, 
 		if (nextWord == ";")//we can only find ';'	
 			return QUIT_NUMBER;
 		else
-			cout << "Error! Quit instruction should has only one key word \"quit\"\n";
+			cerr << "ERROR:" << "Quit instruction should has only one key word \"quit\"\n";
 	}
 	else if (firstWord == "delete")
 	{
@@ -871,7 +892,7 @@ int interpreter(string &SQLSentence, condition &SQLCondition, BPLUSTREE &BTree, 
 	}
 	else//input is wrong
 	{
-		cout << "Error! Doesn't found a instruction key word!" << endl;
+		cerr << "ERROR:" << "Doesn't found a instruction key word!" << endl;
 		end = SQLSentence.find(';', 0);
 		SQLSentence.erase(0, end + 1);
 		return ERROR;
@@ -888,7 +909,10 @@ int interpreter(string &SQLSentence, condition &SQLCondition, BPLUSTREE &BTree, 
 	}
 	end = SQLSentence.find(';', 0);
 	SQLSentence.erase(0, end + 1);//clear
-	API(SQLCondition, BTree, bufManager);
+	if (API(SQLCondition, BTree, bufManager))
+#if OUT_SUCCESS
+		cout << "Query OK!" << endl;
+#endif
 	return code;
 }
 

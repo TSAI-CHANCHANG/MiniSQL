@@ -25,7 +25,7 @@ bool RecordManager::insertRecord(string rawValues)
 	tableInfo = catalogMgr.GetTable(tableName);
 	if (catalogMgr.ErrorInfo == NO_SUCH_TABLE)
 	{
-		cout << "Error: No Such Table!" << endl;
+		cerr << "Error: No Such Table!" << endl;
 		return false;
 	}
 
@@ -194,7 +194,7 @@ bool RecordManager::selectRecords(vector<string> &attributes, string rawWhereCla
 	tableInfo = catalogMgr.GetTable(tableName); // TODO: no such table???
 	if (catalogMgr.ErrorInfo == NO_SUCH_TABLE)
 	{
-		cout << "Error: No Such Table!" << endl;
+		cerr << "Error: No Such Table!" << endl;
 		return false;
 	}
 
@@ -295,7 +295,7 @@ bool RecordManager::deleteRecords(string rawWhereClause = "")
 	tableInfo = catalogMgr.GetTable(tableName);
 	if (catalogMgr.ErrorInfo == NO_SUCH_TABLE)
 	{
-		cout << "Error: No Such Table!" << endl;
+		cerr << "Error: No Such Table!" << endl;
 		return false;
 	}
 
@@ -913,7 +913,7 @@ void RecordManager::checkDeleteTuple(vector<Range *> &ranges)
 	std::ifstream posFileStream(file);
 	if (!posFileStream.is_open())
 	{
-		std::cout << "failed to open " << file << '\n';
+		std::cerr << "ERROR: Failed to open " << file << '\n';
 	}
 	else
 	{
@@ -1212,7 +1212,7 @@ void RecordManager::checkSelectTuple(vector<Range *> &ranges, vector<string> &at
 	std::ifstream posFileStream(file);
 	if (!posFileStream.is_open())
 	{
-		std::cerr << "failed to open " << file << '\n';
+		std::cerr << "ERROR! Failed to open " << file << '\n';
 	}
 	else
 	{
