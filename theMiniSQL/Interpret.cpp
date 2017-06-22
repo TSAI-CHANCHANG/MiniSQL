@@ -586,7 +586,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find(')', SQLCurrentPointer);
 		if (end == -1)
 		{
-			cerr << "ERROR:" << "Can not find key symbol '£©'." << endl;
+			cerr << "ERROR:" << "Can not find key symbol 'Â£Â©'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -739,11 +739,6 @@ int execute_clause(string &fileName, condition &SQLCondition, BPLUSTREE &BTree, 
 				{
 					return QUIT_NUMBER;
 				}
-			}
-			int len = buf.size();
-			while (len && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
-			{
-				--len;
 			}
 			interpreter(buf, SQLCondition, BTree, bufManager);
 			SQLCondition.clearClass();
