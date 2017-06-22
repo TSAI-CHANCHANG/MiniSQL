@@ -586,7 +586,7 @@ int create_clause(string &SQLSentence, int &SQLCurrentPointer, int &end, conditi
 		end = SQLSentence.find(')', SQLCurrentPointer);
 		if (end == -1)
 		{
-			cerr << "ERROR:" << "Can not find key symbol '£©'." << endl;
+			cerr << "ERROR:" << "Can not find key symbol '）'." << endl;
 			end = SQLSentence.find(';', SQLCurrentPointer);
 			SQLCurrentPointer = end;
 			return ERROR;
@@ -716,7 +716,7 @@ int delect_clauese(string &SQLSentence, int &SQLCurrentPointer, int &end, condit
 	//end
 	end = SQLSentence.find(';', SQLCurrentPointer);
 	SQLCurrentPointer = end;
-	return SELECT;
+	return DELETE;
 }
 
 /////////////////////////////////////////////////
@@ -739,6 +739,11 @@ int execute_clause(string &fileName, condition &SQLCondition, BPLUSTREE &BTree, 
 				{
 					return QUIT_NUMBER;
 				}
+			}
+			int len = buf.size();
+			while (len && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+			{
+				--len;
 			}
 			interpreter(buf, SQLCondition, BTree, bufManager);
 			SQLCondition.clearClass();
@@ -873,8 +878,14 @@ int interpreter(string &SQLSentence, condition &SQLCondition, BPLUSTREE &BTree, 
 		string temp;
 		while (SQLSentence[SQLCurrentPointer] == ' ')//get rid of the ' ' from the beginning of the sentence
 			SQLCurrentPointer++;
-		end = SQLSentence.find(' ', SQLCurrentPointer);
-		temp = SQLSentence.substr(SQLCurrentPointer + 1, end - SQLCurrentPointer - 2);
+		end = SQLSentence.find(';', SQLCurrentPointer);
+		--end;
+		while (SQLSentence[end] != '>')
+			--end;
+		--end;
+		while (SQLSentence[end] == ' ')
+			--end;
+		temp = SQLSentence.substr(SQLCurrentPointer + 1, end - SQLCurrentPointer);
 		strcpy(address, temp.c_str());//copy the address to array
 		execute_clause(temp, SQLCondition, BTree, bufManager);
 
