@@ -1,0 +1,114 @@
+﻿  API.cpp
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\buffermanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\catalogmanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\table.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\Interpreter.h(26): warning C4005: “EXEC”: 宏重定义
+  d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\Interpreter.h(20): note: 参见“EXEC”的前一个定义
+  buffermanager.cpp
+buffermanager.cpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\buffermanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\catalogmanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\table.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  catalogmanager.cpp
+catalogmanager.cpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\catalogmanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\buffermanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\table.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+catalogmanager.cpp(112): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\string.h(119): note: 参见“strcpy”的声明
+catalogmanager.cpp(122): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\string.h(119): note: 参见“strcpy”的声明
+catalogmanager.cpp(340): warning C4018: “<=”: 有符号/无符号不匹配
+catalogmanager.cpp(341): warning C4018: “>”: 有符号/无符号不匹配
+catalogmanager.cpp(352): warning C4018: “<=”: 有符号/无符号不匹配
+catalogmanager.cpp(353): warning C4018: “>”: 有符号/无符号不匹配
+catalogmanager.cpp(389): warning C4018: “<=”: 有符号/无符号不匹配
+catalogmanager.cpp(390): warning C4018: “>”: 有符号/无符号不匹配
+  IndexManager.cpp
+IndexManager.cpp(107): warning C4101: “temp”: 未引用的局部变量
+IndexManager.cpp(195): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(228): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(261): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(311): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(322): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(334): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(347): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(413): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(424): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(436): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(449): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(515): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(526): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(538): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(551): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(630): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(637): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(719): warning C4018: “>”: 有符号/无符号不匹配
+IndexManager.cpp(746): warning C4018: “>”: 有符号/无符号不匹配
+IndexManager.cpp(797): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(804): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(886): warning C4018: “>”: 有符号/无符号不匹配
+IndexManager.cpp(913): warning C4018: “>”: 有符号/无符号不匹配
+IndexManager.cpp(957): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(964): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1046): warning C4018: “>”: 有符号/无符号不匹配
+IndexManager.cpp(1073): warning C4018: “>”: 有符号/无符号不匹配
+IndexManager.cpp(1119): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1125): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1131): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1163): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(1166): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1169): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1180): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1184): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1214): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1284): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1290): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1296): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1329): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(1332): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1335): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1346): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1350): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1380): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1450): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1456): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1462): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1495): warning C4018: “>=”: 有符号/无符号不匹配
+IndexManager.cpp(1498): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1501): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1512): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1516): warning C4018: “<”: 有符号/无符号不匹配
+IndexManager.cpp(1546): warning C4018: “<”: 有符号/无符号不匹配
+  Interpret.cpp
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\buffermanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\catalogmanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\table.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\Interpreter.h(26): warning C4005: “EXEC”: 宏重定义
+  d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\Interpreter.h(20): note: 参见“EXEC”的前一个定义
+Interpret.cpp(75): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(82): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(96): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(108): warning C4018: “<=”: 有符号/无符号不匹配
+Interpret.cpp(203): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(205): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(407): warning C4018: “<=”: 有符号/无符号不匹配
+Interpret.cpp(435): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(500): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(520): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(573): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(666): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(696): warning C4018: “<”: 有符号/无符号不匹配
+Interpret.cpp(883): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\string.h(119): note: 参见“strcpy”的声明
+  RecordManager.cpp
+RecordManager.cpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\table.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\buffermanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\catalogmanager.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  正在生成代码
+d:\计算机系\计算机系\数据库\大作业\整合\整合\整合\interpret.cpp(819): warning C4715: “API”: 不是所有的控件路径都返回值
+  All 3169 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  已完成代码的生成
+  整合.vcxproj -> D:\计算机系\计算机系\数据库\大作业\整合\整合\Release\整合.exe
+  整合.vcxproj -> D:\计算机系\计算机系\数据库\大作业\整合\整合\Release\整合.pdb (Full PDB)
